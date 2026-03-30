@@ -206,7 +206,6 @@ passport.use(
                         user.isEmailVerified = true;
                         await user.save();
 
-                        console.log('✅ Linked existing user to Google:', user.email);
                     } else {
                         // Brand new user - create account
                         user = await User.create({
@@ -218,10 +217,8 @@ passport.use(
                             isEmailVerified: true,
                         });
 
-                        console.log('✅ Created new Google user:', user.email);
                     }
                 } else {
-                    console.log('✅ Found existing Google user:', user.email);
                 }
 
                 return done(null, user);
@@ -267,19 +264,13 @@ message: 'Google callback not implemented yet'
 
 export const googleCallback = (req, res, next) => {
     passport.authenticate('google', { session: false }, (err, user) => {
-        console.log('=== GOOGLE CALLBACK ===');
-        console.log('Error:', err);
-        console.log('User:', user);
-        console.log('CLIENT_URL:', process.env.CLIENT_URL);
 
         if (err || !user) {
-            console.log('Redirecting with error');
             return res.redirect(`${process.env.CLIENT_URL}/login?error=authentication_failed`);
         }
 
         // Pass entire user object, not just user._id
         const token = generateToken(user);
-        console.log('Token generated, redirecting to callback');
 
         res.redirect(`${process.env.CLIENT_URL}/auth/callback?token=${token}`);
     })(req, res, next);

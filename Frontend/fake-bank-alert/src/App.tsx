@@ -4,6 +4,7 @@ import Navbar from './components/ui/layouts/Navbar'
 import Footer from './components/ui/Footer'
 import { Toaster } from 'sonner'
 import GoogleCallback from './pages/GoogleCallBack'
+import ProtectedRoute from './components/ProtectedRoute'
 
 // Lazy-loaded pages/components
 const Login = lazy(() => import('./pages/Login'))
@@ -15,11 +16,12 @@ const AlertsHistory = lazy(() => import('./alerts/AlertHistory'))
 const HeroSection = lazy(() => import('./components/ui/layouts/Herosection'))
 const Settings = lazy(() => import('./settings/settings'))
 const AlertCardExample = lazy(() => import('./components/ui/layouts/AlertCard'))
+const FAQs = lazy(() => import('./pages/FAQs'))
 
 
 
 function App() {
- 
+
   return (
     <Router>
       <Navbar />
@@ -30,23 +32,22 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/auth/callback" element={<GoogleCallback />} />
+          <Route path="/faqs" element={<FAQs />} />
 
-          {/* Dashboard / Protected Routes */}
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/create-alert" element={<CreateAlert />} />
-          <Route path="/alerts/:id" element={<AlertDetails />} />
-          <Route path="/alerts-history" element={<AlertsHistory />} />
-          <Route path="/settings" element={<Settings />} />
-         
-          {/* Example / UI demo */}
+          {/* Protected Routes — redirects to /login if not authenticated */}
+          <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="/create-alert" element={<ProtectedRoute><CreateAlert /></ProtectedRoute>} />
+          <Route path="/alerts/:id" element={<ProtectedRoute><AlertDetails /></ProtectedRoute>} />
+          <Route path="/alerts-history" element={<ProtectedRoute><AlertsHistory /></ProtectedRoute>} />
+          <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
         </Routes>
       </Suspense>
       <Footer />
-      
+
       {/* Sonner Toast Container */}
-      <Toaster 
-        position="top-right" 
-        richColors 
+      <Toaster
+        position="top-right"
+        richColors
         expand={true}
         closeButton
       />

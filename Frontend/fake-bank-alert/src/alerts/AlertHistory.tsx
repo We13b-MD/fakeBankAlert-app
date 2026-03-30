@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import {
   AlertCircle, CheckCircle, Clock, TrendingUp, TrendingDown,
-  Search, Filter, Calendar, Download, Eye, Loader2,
+  Search, Filter, Download, Eye, Loader2,
   AlertTriangle, RefreshCw, X, ChevronLeft, ChevronRight
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -12,6 +12,7 @@ interface Alert {
   message: string;
   status: 'Real' | 'Fake' | 'Pending';
   date: string;
+  rawDate: Date;
   bank: string;
   accountNumber: string;
   amount: string;
@@ -37,50 +38,35 @@ export default function AlertsHistory() {
   const [currentPage, setCurrentPage] = useState(1);
 
   // ── Fetch ──
-  /* const fetchAlerts = useCallback(async () => {
-     setIsLoading(true);
-     setError('');
-     try {
-       const data = await getAllAlerts();
-       setAllAlerts(data);
-     } catch (err) {
-       console.error('Failed to fetch alerts:', err);
-       setError('Failed to load alerts. Please try again.');
-     } finally {
-       setIsLoading(false);
-     }
-   }, []);
- 
-   useEffect(() => {
-     fetchAlerts();
-   }, [fetchAlerts]);*/
-
-
   const fetchAlerts = useCallback(async () => {
     setIsLoading(true);
     setError('');
     try {
       const data = await getAllAlerts();
 
-      const mapped = data.map((a: any) => ({
-        id: a._id,
-        message: `${a.transactionType === 'credit' ? 'Credit' : 'Debit'} Alert: ${a.extracted?.amount || '₦' + a.amount?.toLocaleString()
-          } ${a.transactionType === 'credit' ? 'received' : 'sent'}`,
-        status: a.confidence <= 0.3 ? 'Real' : a.confidence <= 0.6 ? 'Pending' : 'Fake',
-        date: new Date(a.timestamp || a.createdAt).toLocaleString('en-US', {
-          month: 'short',
-          day: 'numeric',
-          year: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit',
-        }),
-        bank: a.bankName || a.extracted?.bank || 'Unknown',
-        accountNumber: a.accountNumber
-          ? '****' + a.accountNumber.slice(-4)
-          : a.extracted?.account || 'N/A',
-        amount: a.extracted?.amount || '₦' + a.amount?.toLocaleString(),
-        type: a.transactionType === 'credit' ? 'Credit' : 'Debit',
-      }));
+      const mapped = data.map((a: any) => {
+        const alertDate = new Date(a.timestamp || a.createdAt);
+        return {
+          id: a._id,
+          message: `${a.transactionType === 'credit' ? 'Credit' : 'Debit'} Alert: ${a.extracted?.amount || '₦' + a.amount?.toLocaleString()
+            } ${a.transactionType === 'credit' ? 'received' : 'sent'}`,
+          status: a.confidence <= 0.3 ? 'Real' : a.confidence <= 0.6 ? 'Pending' : 'Fake',
+          date: alertDate.toLocaleString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+          }),
+          rawDate: alertDate,
+          bank: a.bankName || a.extracted?.bank || 'Unknown',
+          accountNumber: a.accountNumber
+            ? '****' + a.accountNumber.slice(-4)
+            : a.extracted?.account || 'N/A',
+          amount: a.extracted?.amount || '₦' + a.amount?.toLocaleString(),
+          type: a.transactionType === 'credit' ? 'Credit' : 'Debit',
+        };
+      });
 
       setAllAlerts(mapped);
       console.log('✅ Alerts loaded:', mapped.length);
@@ -109,9 +95,15 @@ export default function AlertsHistory() {
     const matchesStatus = statusFilter === 'All' || alert.status === statusFilter;
     const matchesType = typeFilter === 'All' || alert.type === typeFilter;
 
-    const alertDate = new Date(alert.date);
-    const matchesDateFrom = !dateFrom || alertDate >= new Date(dateFrom);
-    const matchesDateTo = !dateTo || alertDate <= new Date(dateTo);
+    // Use the raw Date object for reliable date comparisons
+    const matchesDateFrom = !dateFrom || alert.rawDate >= new Date(dateFrom);
+    // For dateTo, set to end of day (23:59:59) so alerts from that day are included
+    let matchesDateTo = true;
+    if (dateTo) {
+      const endOfDay = new Date(dateTo);
+      endOfDay.setHours(23, 59, 59, 999);
+      matchesDateTo = alert.rawDate <= endOfDay;
+    }
 
     return matchesSearch && matchesStatus && matchesType && matchesDateFrom && matchesDateTo;
   });

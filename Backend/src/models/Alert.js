@@ -93,5 +93,8 @@ const alertSchema = new mongoose.Schema(
   }
 );
 
+// Index for fast user-scoped queries sorted by date
+alertSchema.index({ user: 1, createdAt: -1 });
+
 export default mongoose.model('Alert', alertSchema);
 

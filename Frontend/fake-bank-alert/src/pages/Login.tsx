@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Shield, Mail, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,6 +14,7 @@ export default function Login() {
   const [loading,setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const navigate = useNavigate()
+  const location = useLocation()
   const setAuth = useAuthStore((state) => state.setAuth)
 
   const handleLogin = useCallback(async () => {
@@ -32,7 +33,10 @@ export default function Login() {
 
       // Store auth globally
       setAuth(user, token)
- navigate('/dashboard')
+
+      // Redirect back to where the user intended to go (if provided)
+      const from = (location.state as any)?.from || '/dashboard'
+      navigate(from, { replace: true })
       // Redirect
       
     } catch (err: any) {

@@ -212,29 +212,107 @@ export const getDashboardStats = async (req, res) => {
   try {
     const userId = req.user._id;
 
-    // Get all user alerts
-    const alerts = await Alert.find({ user: userId }).sort({ createdAt: -1 });
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const sixtyDaysAgo = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000);
 
-    // Total alerts count
-    const totalAlerts = alerts.length;
+    // Single aggregation pipeline — all counting done in the database
+    const [stats] = await Alert.aggregate([
+      { $match: { user: userId } },
+      {
+        $facet: {
+          // Total and fake counts
+          counts: [
+            {
+              $group: {
+                _id: null,
+                totalAlerts: { $sum: 1 },
+                fakeAlerts: {
+                  $sum: {
+                    $cond: [
+                      {
+                        $or: [
+                          { $gt: ['$confidence', 0.3] },
+                          { $gt: [{ $size: { $ifNull: ['$warnings', []] } }, 0] }
+                        ]
+                      },
+                      1,
+                      0
+                    ]
+                  }
+                },
+                accountsMonitored: { $addToSet: '$accountNumber' }
+              }
+            }
+          ],
+          // Last alert
+          lastAlert: [
+            { $sort: { createdAt: -1 } },
+            { $limit: 1 },
+            { $project: { _id: 1, createdAt: 1 } }
+          ],
+          // Recent 30 days stats
+          recentStats: [
+            { $match: { createdAt: { $gte: thirtyDaysAgo } } },
+            {
+              $group: {
+                _id: null,
+                total: { $sum: 1 },
+                fake: {
+                  $sum: {
+                    $cond: [
+                      {
+                        $or: [
+                          { $gt: ['$confidence', 0.3] },
+                          { $gt: [{ $size: { $ifNull: ['$warnings', []] } }, 0] }
+                        ]
+                      },
+                      1,
+                      0
+                    ]
+                  }
+                }
+              }
+            }
+          ],
+          // Previous 30 days stats (30-60 days ago)
+          previousStats: [
+            { $match: { createdAt: { $gte: sixtyDaysAgo, $lt: thirtyDaysAgo } } },
+            {
+              $group: {
+                _id: null,
+                total: { $sum: 1 },
+                fake: {
+                  $sum: {
+                    $cond: [
+                      {
+                        $or: [
+                          { $gt: ['$confidence', 0.3] },
+                          { $gt: [{ $size: { $ifNull: ['$warnings', []] } }, 0] }
+                        ]
+                      },
+                      1,
+                      0
+                    ]
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    ]);
 
-    // Fake alerts (confidence > 0.3 or has warnings)
-    const fakeAlerts = alerts.filter(alert =>
-      alert.confidence > 0.3 || (alert.warnings && alert.warnings.length > 0)
-    ).length;
-
-    // Real alerts
+    // Extract results (with safe defaults)
+    const countData = stats.counts[0] || { totalAlerts: 0, fakeAlerts: 0, accountsMonitored: [] };
+    const totalAlerts = countData.totalAlerts;
+    const fakeAlerts = countData.fakeAlerts;
     const realAlerts = totalAlerts - fakeAlerts;
-
-    // Unique accounts monitored (unique account numbers)
-    const uniqueAccounts = [...new Set(alerts.map(a => a.accountNumber).filter(Boolean))];
-    const accountsMonitored = uniqueAccounts.length;
+    const accountsMonitored = (countData.accountsMonitored || []).filter(Boolean).length;
 
     // Last alert info
-    const lastAlert = alerts[0] || null;
     let lastAlertInfo = null;
-
-    if (lastAlert) {
+    if (stats.lastAlert.length > 0) {
+      const lastAlert = stats.lastAlert[0];
       const now = new Date();
       const alertDate = new Date(lastAlert.createdAt);
       const diffMs = now - alertDate;
@@ -258,23 +336,18 @@ export const getDashboardStats = async (req, res) => {
       };
     }
 
-    // Calculate trends (compare last 30 days vs previous 30 days)
-    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-    const sixtyDaysAgo = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000);
-
-    const recentAlerts = alerts.filter(a => new Date(a.createdAt) >= thirtyDaysAgo);
-    const previousAlerts = alerts.filter(a =>
-      new Date(a.createdAt) >= sixtyDaysAgo && new Date(a.createdAt) < thirtyDaysAgo
-    );
+    // Trends
+    const recentTotal = stats.recentStats[0]?.total || 0;
+    const previousTotal = stats.previousStats[0]?.total || 0;
+    const recentFake = stats.recentStats[0]?.fake || 0;
+    const previousFake = stats.previousStats[0]?.fake || 0;
 
     const calculateTrend = (recent, previous) => {
       if (previous === 0) return recent > 0 ? 100 : 0;
       return Math.round(((recent - previous) / previous) * 100);
     };
 
-    const totalTrend = calculateTrend(recentAlerts.length, previousAlerts.length);
-    const recentFake = recentAlerts.filter(a => a.confidence > 0.3 || (a.warnings && a.warnings.length > 0)).length;
-    const previousFake = previousAlerts.filter(a => a.confidence > 0.3 || (a.warnings && a.warnings.length > 0)).length;
+    const totalTrend = calculateTrend(recentTotal, previousTotal);
     const fakeTrend = calculateTrend(recentFake, previousFake);
 
     return res.status(200).json({
@@ -285,7 +358,7 @@ export const getDashboardStats = async (req, res) => {
       lastAlert: lastAlertInfo,
       trends: {
         total: { value: Math.abs(totalTrend), isPositive: totalTrend >= 0 },
-        fake: { value: Math.abs(fakeTrend), isPositive: fakeTrend <= 0 } // For fake alerts, lower is better
+        fake: { value: Math.abs(fakeTrend), isPositive: fakeTrend <= 0 }
       }
     });
 
@@ -715,7 +788,6 @@ export const detectTextAlert = async (req, res) => {
       // If AI says it's real but rule-based says fake, trust AI more
       // (OCR text is messy, so rule-based often gives false positives on images)
       if (aiAnalysis && aiAnalysis.verdict === 'real' && status !== 'real_looking') {
-        console.log('AI override: AI says real, rules said', status, '- adjusting');
         status = 'real_looking';
         score = Math.min(score, 2); // reduce score significantly
         // Remove structural warnings that are likely OCR artifacts
@@ -834,10 +906,6 @@ export const detectImageAlert = async (req, res) => {
     // =============================
     const { data: { text } } = await Tesseract.recognize(imagePath, "eng");
 
-    // Log OCR output for debugging
-    console.log("===== OCR EXTRACTED TEXT =====");
-    console.log(text);
-    console.log("=============================");
 
     // Delete temp image after OCR
     try {

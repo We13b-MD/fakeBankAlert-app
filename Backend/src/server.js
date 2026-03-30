@@ -11,17 +11,6 @@ import session from 'express-session'
 import phoneVerificationRoutes from './routes/phoneVerificationRoutes.js'
 
 
-console.log('GOOGLE_CLIENT_ID:', process.env.GOOGLE_CLIENT_ID); // ✅ Add this
-console.log('GOOGLE_CLIENT_SECRET:', process.env.GOOGLE_CLIENT_SECRET); // ✅ Add this
-
-
-// Load environment variables
-dotenv.config();
-
-// Debug: Check if env variables are loaded
-console.log('Environment Check:');
-console.log('MONGO_URI:', process.env.MONGO_URI);
-
 
 // Only connect if MONGO_URI exists
 if (!process.env.MONGO_URI) {
