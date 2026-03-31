@@ -11,7 +11,7 @@ import { Link } from 'react-router-dom';
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [loading,setLoading] = useState(false)
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const navigate = useNavigate()
   const location = useLocation()
@@ -38,7 +38,7 @@ export default function Login() {
       const from = (location.state as any)?.from || '/dashboard'
       navigate(from, { replace: true })
       // Redirect
-      
+
     } catch (err: any) {
       setError(err?.response?.data?.message || 'Login failed. Try again.')
     } finally {
@@ -48,7 +48,7 @@ export default function Login() {
 
   const handleGoogleLogin = useCallback(() => {
     // Redirect to backend Google OAuth
-    window.location.href = '/api/auth/google'
+    window.location.href = `${import.meta.env.VITE_API_BASE_URL}/api/auth/google`
   }, [])
 
   const handleKeyPress = useCallback(
@@ -58,7 +58,7 @@ export default function Login() {
     [handleLogin]
   )
 
-  
+
   return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
@@ -70,7 +70,7 @@ export default function Login() {
             </div>
           </div>
           <h1 className="text-4xl font-bold text-slate-900 mb-2">
-            Fake Bank Alert Detector 
+            Fake Bank Alert Detector
           </h1>
           <p className="text-slate-600 text-lg">
             Detect fake bank alerts instantly
@@ -120,21 +120,21 @@ export default function Login() {
 
             {/* Login Button */}
             {/* Login Button */}
-<Button
-  onClick={handleLogin}
-  disabled={loading}
-  className="w-full h-12 bg-slate-900 hover:bg-slate-800 text-white font-semibold text-base disabled:opacity-70 disabled:cursor-not-allowed"
->
-  {loading ? (
-    <span className="flex items-center justify-center gap-1">
-      <span className="w-3 h-3 bg-white rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
-      <span className="w-3 h-3 bg-white rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
-      <span className="w-3 h-3 bg-white rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
-    </span>
-  ) : (
-    'Login'
-  )}
-</Button>
+            <Button
+              onClick={handleLogin}
+              disabled={loading}
+              className="w-full h-12 bg-slate-900 hover:bg-slate-800 text-white font-semibold text-base disabled:opacity-70 disabled:cursor-not-allowed"
+            >
+              {loading ? (
+                <span className="flex items-center justify-center gap-1">
+                  <span className="w-3 h-3 bg-white rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
+                  <span className="w-3 h-3 bg-white rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
+                  <span className="w-3 h-3 bg-white rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
+                </span>
+              ) : (
+                'Login'
+              )}
+            </Button>
           </div>
 
           {/* Divider */}
@@ -177,12 +177,12 @@ export default function Login() {
           {/* Sign Up Link */}
           <p className="text-center mt-6 text-sm text-slate-600">
             Don't have an account?{' '}
-            <Link 
-    to="/register"  
-    className="text-teal-600 font-semibold hover:text-teal-700 hover:underline transition-colors"
-  >
-    Sign up
-  </Link>
+            <Link
+              to="/register"
+              className="text-teal-600 font-semibold hover:text-teal-700 hover:underline transition-colors"
+            >
+              Sign up
+            </Link>
           </p>
         </div>
 

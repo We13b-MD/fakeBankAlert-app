@@ -45,8 +45,8 @@ export default function Footer() {
               </li>
               <li className="flex items-center gap-3">
                 <Mail className="w-4 h-4 text-teal-500 flex-shrink-0" />
-                <a href="mailto:support@fbadetector.com" className="text-sm hover:text-teal-500 transition-colors">
-                  support@fbadetector.com
+                <a href="mailto:idundunmd3@gmail.com" className="text-sm hover:text-teal-500 transition-colors">
+                  idundunmd3@gmail.com
                 </a>
               </li>
             </ul>

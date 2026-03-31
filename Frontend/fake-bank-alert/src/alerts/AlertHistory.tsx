@@ -69,7 +69,6 @@ export default function AlertsHistory() {
       });
 
       setAllAlerts(mapped);
-      console.log('✅ Alerts loaded:', mapped.length);
     } catch (err) {
       console.error('Failed to fetch alerts:', err);
       setError('Failed to load alerts. Please try again.');

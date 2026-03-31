@@ -52,7 +52,6 @@ export default function DetectImage() {
 
     try {
       const data = await detectImageAlert(imageFile);
-      console.log("Detection result:", data);
       setResult(data);
     } catch (err: any) {
       console.error("Detection error:", err.message);

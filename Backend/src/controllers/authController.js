@@ -8,9 +8,6 @@ import passport from 'passport'
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20'
 
 // Generate JWT
-
-
-
 function generateToken(user) {
     return jwt.sign(
         { id: user._id, email: user.email, role: user.role },
@@ -19,32 +16,32 @@ function generateToken(user) {
     )
 }
 
-//RegisterUser
-
+// Register User
 export const registerUser = async (req, res) => {
     try {
-
-
         const { fullName, email, password } = req.body;
 
         if (!fullName || !email || !password) {
             return res.status(400).json({ message: "All fields are required" });
         }
 
-        //check if the user already exists
-        const existing = await User.findOne({ email });
-        if (existing) {
-            return res.status(400).json({ message: 'Email already registerd' })
+        if (password.length < 6) {
+            return res.status(400).json({ message: "Password must be at least 6 characters" });
         }
 
-        //Hashed password
+        // Check if the user already exists
+        const existing = await User.findOne({ email });
+        if (existing) {
+            return res.status(400).json({ message: 'Email already registered' })
+        }
 
+        // Hash password
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
-        //create User
+        // Create User
         const user = await User.create({
-            name: fullName, // ← save fullName into "name" field
+            name: fullName,
             email,
             password: hashedPassword,
         })
@@ -63,82 +60,25 @@ export const registerUser = async (req, res) => {
     } catch (err) {
         return res.status(500).json({ message: err.message })
     }
-
-
 }
 
-
-// loginUser
-/*export const loginUser = async(req,res)=>{
-try{
-    const {email, password} = req.body;
-    
-    console.log('=== LOGIN ATTEMPT ===');
-    console.log('Email received:', email);
-    console.log('Email type:', typeof email);
-    console.log('Password received:', password ? 'Yes' : 'No');
-
-    if (!email || !password) {
-        return res.status(400).json({ message: "Email and password are required" });
-    }
-
-    // Try to find user with detailed logging
-    const user = await User.findOne({email: email.toLowerCase().trim()});
-    console.log('User found:', user ? 'Yes' : 'No');
-    
-    if (user) {
-        console.log('User email in DB:', user.email);
-        console.log('User has password:', !!user.password);
-    }
-    
-    // Also check if user exists with any variation
-    const allUsers = await User.find({});
-    console.log('Total users in DB:', allUsers.length);
-    console.log('All emails in DB:', allUsers.map(u => u.email));
-    
-    if(!user){
-        return res.status(400).json({message:'invalid credentials'})
-    }
-
-    // Rest of your code...
-    const isMatch = await bcrypt.compare(password, user.password)
-    if(!isMatch){
-        return res.status(400).json({message:'Invalid credentials'})
-    }
-    
-    const token = generateToken(user);
-    return res.status(200).json({
-        message: 'Login successful',
-        user: {
-            id: user._id,
-            name: user.name,
-            email: user.email,
-        },
-        token,
-    });
-
-}catch(err){
-    console.error('Login error:', err);
-    return res.status(500).json({message:err.message})
-}
-}*/
-
-
-
+// Login User
 export const loginUser = async (req, res) => {
-
     try {
-        const { email, password } = req.body; // "email" can be name or email
+        const { email, password } = req.body;
 
         if (!email || !password) {
             return res.status(400).json({ message: "Email/Username and password are required" });
         }
 
+        // Escape special regex characters to prevent ReDoS attacks
+        const escapedInput = email.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
         // Search by EITHER email OR name (case-insensitive)
         const user = await User.findOne({
             $or: [
                 { email: email.toLowerCase().trim() },
-                { name: { $regex: new RegExp(`^${email.trim()}$`, 'i') } }
+                { name: { $regex: new RegExp(`^${escapedInput}$`, 'i') } }
             ]
         });
 
@@ -146,14 +86,14 @@ export const loginUser = async (req, res) => {
             return res.status(400).json({ message: 'Invalid credentials' })
         }
 
-        // Check if user has password (not a Google user)
+        // Check if user has password (not a Google-only user)
         if (!user.password) {
             return res.status(400).json({
                 message: 'This account uses Google Sign-In. Please login with Google.'
             });
         }
 
-        // Compare password 
+        // Compare password
         const isMatch = await bcrypt.compare(password, user.password)
         if (!isMatch) {
             return res.status(400).json({ message: 'Invalid credentials' })
@@ -177,8 +117,7 @@ export const loginUser = async (req, res) => {
 }
 
 
-//Google Authenticattion
-//Google Authentication
+// Google OAuth Authentication
 passport.use(
     new GoogleStrategy({
         clientID: process.env.GOOGLE_CLIENT_ID,
@@ -198,16 +137,14 @@ passport.use(
                     user = await User.findOne({ email: googleEmail });
 
                     if (user) {
-                        // User exists with email but not linked to Google
-                        // Link their Google account
+                        // User exists with email but not linked to Google — link them
                         user.googleId = profile.id;
                         user.googleEmail = googleEmail;
                         user.avatar = user.avatar || profile.photos[0]?.value;
                         user.isEmailVerified = true;
                         await user.save();
-
                     } else {
-                        // Brand new user - create account
+                        // Brand new user — create account
                         user = await User.create({
                             googleId: profile.id,
                             name: profile.displayName,
@@ -216,29 +153,24 @@ passport.use(
                             avatar: profile.photos[0]?.value,
                             isEmailVerified: true,
                         });
-
                     }
-                } else {
                 }
 
                 return done(null, user);
             } catch (err) {
-                console.error('❌ Google auth error:', err);
+                console.error('Google auth error:', err);
                 return done(err, null);
             }
         }
     )
 )
-//serial user
 
-
-
+// Serialize user
 passport.serializeUser((user, done) => {
     done(null, user.id)
 })
 
-//Deserialize user 
-
+// Deserialize user
 passport.deserializeUser(async (id, done) => {
     try {
         const user = await User.findById(id);
@@ -253,15 +185,7 @@ export const googleAuth = passport.authenticate('google', {
     scope: ['profile', 'email'],
 });
 
-//Google Callback
-/*export const googleCallback = async(req,res)=>{
- return res.status(200).json({
-message: 'Google callback not implemented yet'
-});
-
-}*/
-
-
+// Google Callback
 export const googleCallback = (req, res, next) => {
     passport.authenticate('google', { session: false }, (err, user) => {
 
@@ -269,9 +193,7 @@ export const googleCallback = (req, res, next) => {
             return res.redirect(`${process.env.CLIENT_URL}/login?error=authentication_failed`);
         }
 
-        // Pass entire user object, not just user._id
         const token = generateToken(user);
-
         res.redirect(`${process.env.CLIENT_URL}/auth/callback?token=${token}`);
     })(req, res, next);
 };

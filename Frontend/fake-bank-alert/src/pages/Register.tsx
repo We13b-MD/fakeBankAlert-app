@@ -15,7 +15,7 @@ export default function Register() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+
   // Track which fields have been touched (for validation)
   const [touched, setTouched] = useState({
     fullName: false,
@@ -33,12 +33,12 @@ export default function Register() {
   // Field validation
   const fieldErrors = {
     fullName: touched.fullName && !fullName ? 'Full name is required' : '',
-    email: touched.email && !email ? 'Email is required' : 
-           touched.email && email && !/\S+@\S+\.\S+/.test(email) ? 'Invalid email format' : '',
+    email: touched.email && !email ? 'Email is required' :
+      touched.email && email && !/\S+@\S+\.\S+/.test(email) ? 'Invalid email format' : '',
     password: touched.password && !password ? 'Password is required' :
-              touched.password && password && password.length < 6 ? 'Password must be at least 6 characters' : '',
+      touched.password && password && password.length < 6 ? 'Password must be at least 6 characters' : '',
     confirmPassword: touched.confirmPassword && !confirmPassword ? 'Please confirm password' :
-                     touched.confirmPassword && confirmPassword && password !== confirmPassword ? 'Passwords do not match' : ''
+      touched.confirmPassword && confirmPassword && password !== confirmPassword ? 'Passwords do not match' : ''
   };
 
   const handleBlur = (field: keyof typeof touched) => {
@@ -106,7 +106,7 @@ export default function Register() {
   }, [fullName, email, password, confirmPassword, navigate, setAuth]);
 
   const handleGoogleRegister = useCallback(() => {
-    window.location.href = '/api/auth/google';
+    window.location.href = `${import.meta.env.VITE_API_BASE_URL}/api/auth/google`;
   }, []);
 
   const handleKeyPress = useCallback(
@@ -143,14 +143,13 @@ export default function Register() {
                 Full Name
               </Label>
               <div className="relative">
-                <User 
-                  className={`absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors ${
-                    fieldErrors.fullName 
-                      ? 'text-red-500' 
-                      : focused === 'fullName' 
-                      ? 'text-teal-600' 
-                      : 'text-slate-400'
-                  }`} 
+                <User
+                  className={`absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors ${fieldErrors.fullName
+                      ? 'text-red-500'
+                      : focused === 'fullName'
+                        ? 'text-teal-600'
+                        : 'text-slate-400'
+                    }`}
                 />
                 <Input
                   id="fullName"
@@ -161,13 +160,12 @@ export default function Register() {
                   onFocus={() => handleFocus('fullName')}
                   onKeyPress={handleKeyPress}
                   placeholder="John Doe"
-                  className={`pl-10 h-12 transition-all duration-200 ${
-                    fieldErrors.fullName
+                  className={`pl-10 h-12 transition-all duration-200 ${fieldErrors.fullName
                       ? 'border-red-500 focus:border-red-500 focus:ring-red-500 bg-red-50'
                       : focused === 'fullName'
-                      ? 'border-teal-600 ring-2 ring-teal-100'
-                      : 'border-slate-300 hover:border-slate-400'
-                  }`}
+                        ? 'border-teal-600 ring-2 ring-teal-100'
+                        : 'border-slate-300 hover:border-slate-400'
+                    }`}
                   disabled={loading}
                 />
                 {fieldErrors.fullName && (
@@ -187,14 +185,13 @@ export default function Register() {
                 Email Address
               </Label>
               <div className="relative">
-                <Mail 
-                  className={`absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors ${
-                    fieldErrors.email 
-                      ? 'text-red-500' 
-                      : focused === 'email' 
-                      ? 'text-teal-600' 
-                      : 'text-slate-400'
-                  }`} 
+                <Mail
+                  className={`absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors ${fieldErrors.email
+                      ? 'text-red-500'
+                      : focused === 'email'
+                        ? 'text-teal-600'
+                        : 'text-slate-400'
+                    }`}
                 />
                 <Input
                   id="email"
@@ -205,13 +202,12 @@ export default function Register() {
                   onFocus={() => handleFocus('email')}
                   onKeyPress={handleKeyPress}
                   placeholder="you@example.com"
-                  className={`pl-10 h-12 transition-all duration-200 ${
-                    fieldErrors.email
+                  className={`pl-10 h-12 transition-all duration-200 ${fieldErrors.email
                       ? 'border-red-500 focus:border-red-500 focus:ring-red-500 bg-red-50'
                       : focused === 'email'
-                      ? 'border-teal-600 ring-2 ring-teal-100'
-                      : 'border-slate-300 hover:border-slate-400'
-                  }`}
+                        ? 'border-teal-600 ring-2 ring-teal-100'
+                        : 'border-slate-300 hover:border-slate-400'
+                    }`}
                   disabled={loading}
                 />
                 {fieldErrors.email && (
@@ -231,14 +227,13 @@ export default function Register() {
                 Password
               </Label>
               <div className="relative">
-                <Lock 
-                  className={`absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors ${
-                    fieldErrors.password 
-                      ? 'text-red-500' 
-                      : focused === 'password' 
-                      ? 'text-teal-600' 
-                      : 'text-slate-400'
-                  }`} 
+                <Lock
+                  className={`absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors ${fieldErrors.password
+                      ? 'text-red-500'
+                      : focused === 'password'
+                        ? 'text-teal-600'
+                        : 'text-slate-400'
+                    }`}
                 />
                 <Input
                   id="password"
@@ -249,13 +244,12 @@ export default function Register() {
                   onFocus={() => handleFocus('password')}
                   onKeyPress={handleKeyPress}
                   placeholder="Create a strong password"
-                  className={`pl-10 h-12 transition-all duration-200 ${
-                    fieldErrors.password
+                  className={`pl-10 h-12 transition-all duration-200 ${fieldErrors.password
                       ? 'border-red-500 focus:border-red-500 focus:ring-red-500 bg-red-50'
                       : focused === 'password'
-                      ? 'border-teal-600 ring-2 ring-teal-100'
-                      : 'border-slate-300 hover:border-slate-400'
-                  }`}
+                        ? 'border-teal-600 ring-2 ring-teal-100'
+                        : 'border-slate-300 hover:border-slate-400'
+                    }`}
                   disabled={loading}
                 />
                 {fieldErrors.password && (
@@ -275,14 +269,13 @@ export default function Register() {
                 Confirm Password
               </Label>
               <div className="relative">
-                <Lock 
-                  className={`absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors ${
-                    fieldErrors.confirmPassword 
-                      ? 'text-red-500' 
-                      : focused === 'confirmPassword' 
-                      ? 'text-teal-600' 
-                      : 'text-slate-400'
-                  }`} 
+                <Lock
+                  className={`absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors ${fieldErrors.confirmPassword
+                      ? 'text-red-500'
+                      : focused === 'confirmPassword'
+                        ? 'text-teal-600'
+                        : 'text-slate-400'
+                    }`}
                 />
                 <Input
                   id="confirmPassword"
@@ -293,13 +286,12 @@ export default function Register() {
                   onFocus={() => handleFocus('confirmPassword')}
                   onKeyPress={handleKeyPress}
                   placeholder="Re-enter your password"
-                  className={`pl-10 h-12 transition-all duration-200 ${
-                    fieldErrors.confirmPassword
+                  className={`pl-10 h-12 transition-all duration-200 ${fieldErrors.confirmPassword
                       ? 'border-red-500 focus:border-red-500 focus:ring-red-500 bg-red-50'
                       : focused === 'confirmPassword'
-                      ? 'border-teal-600 ring-2 ring-teal-100'
-                      : 'border-slate-300 hover:border-slate-400'
-                  }`}
+                        ? 'border-teal-600 ring-2 ring-teal-100'
+                        : 'border-slate-300 hover:border-slate-400'
+                    }`}
                   disabled={loading}
                 />
                 {fieldErrors.confirmPassword && (
@@ -319,15 +311,15 @@ export default function Register() {
               disabled={loading}
               className="w-full h-12 bg-slate-900 hover:bg-slate-800 text-white font-semibold text-base transition-colors"
             >
-             {loading ? (
-    <span className="flex items-center justify-center gap-1">
-      <span className="w-3 h-3 bg-white rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
-      <span className="w-3 h-3 bg-white rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
-      <span className="w-3 h-3 bg-white rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
-    </span>
-  ) : (
-    'Register'
-  )}
+              {loading ? (
+                <span className="flex items-center justify-center gap-1">
+                  <span className="w-3 h-3 bg-white rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
+                  <span className="w-3 h-3 bg-white rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
+                  <span className="w-3 h-3 bg-white rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
+                </span>
+              ) : (
+                'Register'
+              )}
             </Button>
           </div>
 
@@ -372,12 +364,12 @@ export default function Register() {
           {/* Login Link */}
           <p className="text-center mt-6 text-sm text-slate-600">
             Already have an account?{' '}
-             <Link 
-    to="/login"  
-    className="text-teal-600 font-semibold hover:text-teal-700 hover:underline transition-colors"
-  >
-    login
-  </Link>
+            <Link
+              to="/login"
+              className="text-teal-600 font-semibold hover:text-teal-700 hover:underline transition-colors"
+            >
+              login
+            </Link>
           </p>
         </div>
 

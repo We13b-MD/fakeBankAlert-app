@@ -1,7 +1,5 @@
 // Helper to get token from Zustand persisted storage
 
-
-
 function getAuthToken(): string | null {
     const stored = localStorage.getItem('auth-storage');
     if (!stored) return null;
@@ -10,6 +8,20 @@ function getAuthToken(): string | null {
         return parsed?.state?.token || null;
     } catch {
         return null;
+    }
+}
+
+// Handle expired/invalid JWT — clear auth and redirect to login
+function handleExpiredToken(): never {
+    localStorage.removeItem('auth-storage');
+    window.location.href = '/login';
+    throw new Error('Session expired');
+}
+
+// Check response for expired token before processing
+function checkAuth(res: Response): void {
+    if (res.status === 401) {
+        handleExpiredToken();
     }
 }
 
@@ -35,12 +47,10 @@ export async function detectTextAlert(text: string) {
         }
     );
 
-
-
     if (!res.ok) {
+        checkAuth(res);
         const data = await res.json().catch(() => ({}));
 
-        // Check if it's a phone verification error
         if (res.status === 403 && data.code === 'PHONE_VERIFICATION_REQUIRED') {
             throw new PhoneVerificationRequiredError();
         }
@@ -52,11 +62,7 @@ export async function detectTextAlert(text: string) {
 }
 
 
-
-
-//detectImageAlert
-
-
+// Detect Image Alert
 export async function detectImageAlert(imageFile: File) {
     const formData = new FormData();
     formData.append("image", imageFile);
@@ -67,13 +73,13 @@ export async function detectImageAlert(imageFile: File) {
             method: "POST",
             headers: {
                 Authorization: `Bearer ${getAuthToken()}`
-                // DO NOT set Content-Type here
             },
             body: formData,
         }
     );
 
     if (!res.ok) {
+        checkAuth(res);
         const data = await res.json().catch(() => ({}));
 
         if (res.status === 403 && data.code === "PHONE_VERIFICATION_REQUIRED") {
@@ -85,7 +91,8 @@ export async function detectImageAlert(imageFile: File) {
 
     return res.json();
 }
-// Create Alert API function
+
+// Create Alert
 export interface CreateAlertPayload {
     bankName: string;
     accountNumber: string;
@@ -110,6 +117,7 @@ export async function createAlert(payload: CreateAlertPayload) {
     );
 
     if (!res.ok) {
+        checkAuth(res);
         const data = await res.json().catch(() => ({}));
 
         if (res.status === 403 && data.code === 'PHONE_VERIFICATION_REQUIRED') {
@@ -122,7 +130,7 @@ export async function createAlert(payload: CreateAlertPayload) {
     return res.json();
 }
 
-// Phone verification API functions
+// Phone verification
 export async function startPhoneVerification(phoneNumber: string) {
     const res = await fetch(
         `${import.meta.env.VITE_API_BASE_URL}/api/verify/start`,
@@ -138,6 +146,7 @@ export async function startPhoneVerification(phoneNumber: string) {
 
     const data = await res.json();
     if (!res.ok) {
+        checkAuth(res);
         throw new Error(data.message || 'Failed to send OTP');
     }
     return data;
@@ -158,28 +167,14 @@ export async function confirmPhoneVerification(otp: string) {
 
     const data = await res.json();
     if (!res.ok) {
+        checkAuth(res);
         throw new Error(data.message || 'Failed to verify OTP');
     }
     return data;
 }
 
 
-/*export const getDashboardStats = async () => {
-  const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/alerts/dashboard/stats`, {
-    method: 'GET',
-    headers: {
-      Authorization: `Bearer ${getAuthToken()}`
-    }
-  });
-
-  if (!response.ok) {
-    throw new Error('Failed to fetch dashboard stats');
-  }
-
-  return response.json();
-};*/
-
-
+// Dashboard
 export const getDashboardStats = async () => {
     const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/alerts/dashboard/stats`, {
         method: 'GET',
@@ -189,6 +184,7 @@ export const getDashboardStats = async () => {
     });
 
     if (!response.ok) {
+        checkAuth(response);
         throw new Error('Failed to fetch dashboard stats');
     }
 
@@ -204,6 +200,7 @@ export const getRecentAlertDetails = async () => {
     });
 
     if (!response.ok) {
+        checkAuth(response);
         throw new Error('Failed to fetch recent alert details');
     }
 
@@ -211,18 +208,7 @@ export const getRecentAlertDetails = async () => {
 };
 
 
-// ── Add this to your existing @/lib/api file ──
-
-// Fetch all alerts for history page
-/*export const getAllAlerts = async () => {
-  const response = await axios.get('/api/alerts'); // update endpoint to match your backend
-  return response.data;
-};*/
-
-
-
-
-// ✅ Use existing /my-alerts route instead of /alerts
+// Alert History
 export const getAllAlerts = async () => {
     const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/alerts/my-alerts`, {
         method: 'GET',
@@ -232,6 +218,7 @@ export const getAllAlerts = async () => {
     });
 
     if (!response.ok) {
+        checkAuth(response);
         throw new Error('Failed to fetch alerts');
     }
 
@@ -239,9 +226,7 @@ export const getAllAlerts = async () => {
 };
 
 
-// ── Settings API Functions ──
-
-// Get current user profile
+// Settings
 export const getUserProfile = async () => {
     const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/auth/profile`, {
         method: 'GET',
@@ -251,13 +236,13 @@ export const getUserProfile = async () => {
     });
 
     if (!response.ok) {
+        checkAuth(response);
         throw new Error('Failed to fetch profile');
     }
 
     return response.json();
 };
 
-// Update user profile (name)
 export const updateProfile = async (data: { name?: string }) => {
     const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/auth/update-profile`, {
         method: 'PUT',
@@ -269,6 +254,7 @@ export const updateProfile = async (data: { name?: string }) => {
     });
 
     if (!response.ok) {
+        checkAuth(response);
         const err = await response.json().catch(() => ({}));
         throw new Error(err.message || 'Failed to update profile');
     }
@@ -276,7 +262,6 @@ export const updateProfile = async (data: { name?: string }) => {
     return response.json();
 };
 
-// Change password
 export const changePassword = async (data: { oldPassword: string; newPassword: string }) => {
     const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/auth/change-password`, {
         method: 'PUT',
@@ -288,6 +273,7 @@ export const changePassword = async (data: { oldPassword: string; newPassword: s
     });
 
     if (!response.ok) {
+        checkAuth(response);
         const err = await response.json().catch(() => ({}));
         throw new Error(err.message || 'Failed to change password');
     }
@@ -295,7 +281,6 @@ export const changePassword = async (data: { oldPassword: string; newPassword: s
     return response.json();
 };
 
-// Delete account
 export const deleteAccount = async () => {
     const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/auth/delete`, {
         method: 'DELETE',
@@ -305,6 +290,7 @@ export const deleteAccount = async () => {
     });
 
     if (!response.ok) {
+        checkAuth(response);
         const err = await response.json().catch(() => ({}));
         throw new Error(err.message || 'Failed to delete account');
     }

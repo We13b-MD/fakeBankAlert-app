@@ -23,7 +23,7 @@ export default function AlertCard({
   type,
   onClick
 }: AlertCardProps) {
-  
+
   const getStatusConfig = (status: 'Real' | 'Fake' | 'Pending') => {
     switch (status) {
       case 'Real':
@@ -63,13 +63,11 @@ export default function AlertCard({
     >
       <div className="flex items-start gap-3">
         {/* Transaction Type Icon */}
-        <div className={`p-3 rounded-lg flex-shrink-0 ${
-          type === 'Credit' ? 'bg-green-50' : 'bg-red-50'
-        }`}>
+        <div className={`p-3 rounded-lg flex-shrink-0 ${type === 'Credit' ? 'bg-green-50' : 'bg-red-50'
+          }`}>
           {type === 'Credit' ? (
-            <TrendingUp className={`w-6 h-6 ${
-              type === 'Credit' ? 'text-green-600' : 'text-red-600'
-            }`} />
+            <TrendingUp className={`w-6 h-6 ${type === 'Credit' ? 'text-green-600' : 'text-red-600'
+              }`} />
           ) : (
             <TrendingDown className="w-6 h-6 text-red-600" />
           )}
@@ -82,11 +80,11 @@ export default function AlertCard({
             <h3 className="font-bold text-slate-900 text-base truncate">
               {message}
             </h3>
-            <button 
+            <button
               className="p-1 hover:bg-slate-100 rounded transition-colors flex-shrink-0"
               onClick={(e) => {
                 e.stopPropagation();
-                console.log('Options menu clicked');
+                console.log('Options menu clicked'); // TODO: implement options menu
               }}
             >
               <MoreVertical className="w-4 h-4 text-slate-400" />
@@ -160,8 +158,7 @@ export function AlertCardExample() {
     }
   ];
 
-  const handleAlertClick = (id: string) => {
-    console.log('Alert clicked:', id);
+  const handleAlertClick = (_id: string) => {
     // Navigate to alert details or open modal
   };
 

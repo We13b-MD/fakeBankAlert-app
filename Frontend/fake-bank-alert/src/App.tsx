@@ -15,8 +15,8 @@ const AlertDetails = lazy(() => import('./alerts/dashboard/AlertDetails'))
 const AlertsHistory = lazy(() => import('./alerts/AlertHistory'))
 const HeroSection = lazy(() => import('./components/ui/layouts/Herosection'))
 const Settings = lazy(() => import('./settings/settings'))
-const AlertCardExample = lazy(() => import('./components/ui/layouts/AlertCard'))
 const FAQs = lazy(() => import('./pages/FAQs'))
+const NotFound = lazy(() => import('./pages/NotFound'))
 
 
 
@@ -40,6 +40,9 @@ function App() {
           <Route path="/alerts/:id" element={<ProtectedRoute><AlertDetails /></ProtectedRoute>} />
           <Route path="/alerts-history" element={<ProtectedRoute><AlertsHistory /></ProtectedRoute>} />
           <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+
+          {/* 404 Catch-all */}
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>
       <Footer />

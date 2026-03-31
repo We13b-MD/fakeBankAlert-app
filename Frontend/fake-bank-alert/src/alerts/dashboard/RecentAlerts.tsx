@@ -90,13 +90,11 @@ export default function RecentAlerts() {
     }
   };
 
-  const handleAlertClick = (alertId: string) => {
-    console.log('Alert clicked:', alertId);
+  const handleAlertClick = (_alertId: string) => {
     // Open modal or navigate to details page
   };
 
   const handleViewAll = () => {
-    console.log('View all alerts clicked');
     // Navigate to full alerts page
   };
 
@@ -122,13 +120,11 @@ export default function RecentAlerts() {
             >
               <div className="flex items-start gap-3">
                 {/* Transaction Type Icon */}
-                <div className={`p-2 rounded-lg ${
-                  alert.type === 'Credit' ? 'bg-green-50' : 'bg-red-50'
-                }`}>
+                <div className={`p-2 rounded-lg ${alert.type === 'Credit' ? 'bg-green-50' : 'bg-red-50'
+                  }`}>
                   {alert.type === 'Credit' ? (
-                    <TrendingUp className={`w-5 h-5 ${
-                      alert.type === 'Credit' ? 'text-green-600' : 'text-red-600'
-                    }`} />
+                    <TrendingUp className={`w-5 h-5 ${alert.type === 'Credit' ? 'text-green-600' : 'text-red-600'
+                      }`} />
                   ) : (
                     <TrendingDown className={`w-5 h-5 text-red-600`} />
                   )}
@@ -145,7 +141,7 @@ export default function RecentAlerts() {
                       {alert.status}
                     </span>
                   </div>
-                  
+
                   <div className="flex items-center gap-2 text-xs text-slate-600 mb-2">
                     <span className="font-medium">{alert.bank}</span>
                     <span className="text-slate-400">•</span>
