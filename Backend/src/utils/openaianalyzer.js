@@ -1,10 +1,10 @@
 import OpenAI from "openai";
 
-const client = new OpenAI({
-  apiKey: process.env.OPENAIKEY,
-});
-
 export const analyzeAlertWithAi = async (text) => {
+  // Initialize inside the function so env vars are guaranteed to be loaded
+  const client = new OpenAI({
+    apiKey: process.env.OPENAIKEY,
+  });
   if (!text || typeof text !== 'string') {
     throw new Error('Valid text input is required');
   }
