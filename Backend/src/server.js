@@ -22,6 +22,9 @@ connectDB()
 
 const app = express()
 
+// Trust the Render proxy so the rate limiter doesn't crash!
+app.set('trust proxy', 1);
+
 // Security headers
 app.use(helmet());
 
