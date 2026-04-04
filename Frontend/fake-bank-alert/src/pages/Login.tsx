@@ -47,7 +47,8 @@ export default function Login() {
 
   const handleGoogleLogin = useCallback(() => {
     // Redirect to backend Google OAuth
-    window.location.href = `${import.meta.env.VITE_API_BASE_URL}/api/auth/google`
+    const API = import.meta.env.VITE_API_BASE_URL || 'https://fakebankalert-app-1.onrender.com';
+    window.location.href = `${API}/api/auth/google`
   }, [])
 
   const handleKeyPress = useCallback(

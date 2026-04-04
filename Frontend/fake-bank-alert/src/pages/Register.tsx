@@ -100,7 +100,8 @@ export default function Register() {
   }, [fullName, email, password, confirmPassword, navigate, setAuth]);
 
   const handleGoogleRegister = useCallback(() => {
-    window.location.href = `${import.meta.env.VITE_API_BASE_URL}/api/auth/google`;
+    const API = import.meta.env.VITE_API_BASE_URL || 'https://fakebankalert-app-1.onrender.com';
+    window.location.href = `${API}/api/auth/google`;
   }, []);
 
   const handleKeyPress = useCallback(
