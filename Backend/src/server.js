@@ -37,7 +37,8 @@ app.use(
       // allow requests with no origin (Postman, mobile apps)
       if (!origin) return callback(null, true);
 
-      if (allowedOrigins.includes(origin)) {
+      // Automatically allow ANY Vercel preview link!
+      if (allowedOrigins.includes(origin) || origin.endsWith('.vercel.app')) {
         callback(null, true);
       } else {
         callback(new Error("Not allowed by CORS"));
