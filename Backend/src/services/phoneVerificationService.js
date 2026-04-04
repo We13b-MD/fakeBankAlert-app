@@ -12,7 +12,7 @@ export const hashOtp = (otp) => {
 // Sends OTP via SMS (Termii)
 export const sendOtp = async (phoneNumber, otp) => {
   if (process.env.PHONE_VERIFICATION_MODE === 'mock') {
-    console.log(`[MOCK SMS] OTP for ${phoneNumber} sent`);
+    console.log(`[MOCK SMS] OTP for ${phoneNumber} sent: ${otp}`);
     return;
   }
 
