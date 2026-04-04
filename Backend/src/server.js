@@ -95,4 +95,14 @@ app.use((err, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server started on ${PORT}`))
+app.listen(PORT, () => {
+  console.log(`Server started on ${PORT}`);
+
+  // Keep Render Awake by pinging its own '/' route every 14 minutes so it never hits the 15-minute sleep threshold
+  const RENDER_URL = 'https://fakebankalert-app-1.onrender.com';
+  setInterval(() => {
+    fetch(RENDER_URL)
+      .then(res => console.log(`[Keep-Alive] Pinged ${RENDER_URL} - Status: ${res.status}`))
+      .catch(err => console.error(`[Keep-AliveError] Ping failed:`, err.message));
+  }, 14 * 60 * 1000); // 14 minutes in milliseconds
+});
