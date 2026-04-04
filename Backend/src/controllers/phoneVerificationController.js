@@ -34,6 +34,7 @@ export const startPhoneVerification = async (req, res) => {
 
     return res.status(200).json({
       message: 'OTP sent to phone number',
+      ...(process.env.PHONE_VERIFICATION_MODE === 'mock' && { mockOtp: otp })
     });
   } catch (err) {
     console.error('Start verification error:', err);
