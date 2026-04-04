@@ -5,8 +5,9 @@ import App from './App.tsx';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import axios from 'axios';
 
-// Configure global Axios settings
-axios.defaults.baseURL = import.meta.env.VITE_API_BASE_URL;
+// Configure global Axios settings with bulletproof fallback
+const API_URL = import.meta.env.VITE_API_BASE_URL || 'https://fakebankalert-app-1.onrender.com';
+axios.defaults.baseURL = API_URL;
 axios.defaults.withCredentials = true;
 
 // Create React Query client
