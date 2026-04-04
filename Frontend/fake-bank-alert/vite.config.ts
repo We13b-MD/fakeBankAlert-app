@@ -10,13 +10,7 @@ export default defineConfig({
     },
   },
   server: {
-    proxy: {
-      "/api": {
-        target: "http://localhost:5000", // 👈 your backend URL
-        changeOrigin: true,
-        secure: false,
-      },
-    },
+    // Proxy configuration removed as we now use VITE_API_BASE_URL directly in Axios
   },
 })
 

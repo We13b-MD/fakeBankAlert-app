@@ -6,22 +6,21 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { authApi } from '@/auth/auth.api';
 import { useAuthStore } from '@/store/auth.store';
+import { authToasts } from '@/utils.ts/toast.helper';
 import { Link } from 'react-router-dom';
 
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
   const navigate = useNavigate()
   const location = useLocation()
   const setAuth = useAuthStore((state) => state.setAuth)
 
   const handleLogin = useCallback(async () => {
-    setError(null)
 
     if (!email || !password) {
-      setError('Email and password are required')
+      authToasts.loginError('Email and password are required')
       return
     }
 
@@ -40,7 +39,7 @@ export default function Login() {
       // Redirect
 
     } catch (err: any) {
-      setError(err?.response?.data?.message || 'Login failed. Try again.')
+      authToasts.loginError(err?.response?.data?.message || 'Login failed. Try again.')
     } finally {
       setLoading(false)
     }

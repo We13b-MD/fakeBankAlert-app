@@ -14,7 +14,6 @@ export default function Register() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   // Track which fields have been touched (for validation)
   const [touched, setTouched] = useState({
@@ -51,7 +50,6 @@ export default function Register() {
   };
 
   const handleRegister = useCallback(async () => {
-    setError(null);
 
     // Mark all fields as touched
     setTouched({
@@ -62,19 +60,16 @@ export default function Register() {
     });
 
     if (!fullName || !email || !password || !confirmPassword) {
-      setError('All fields are required');
       authToasts.registerError('All fields are required');
       return;
     }
 
     if (password !== confirmPassword) {
-      setError('Passwords do not match');
       authToasts.registerError('Passwords do not match');
       return;
     }
 
     if (password.length < 6) {
-      setError('Password must be at least 6 characters');
       authToasts.registerError('Password must be at least 6 characters');
       return;
     }
@@ -98,7 +93,6 @@ export default function Register() {
       }, 2000);
     } catch (err: any) {
       const errorMessage = err?.response?.data?.message || 'Registration failed. Try again.';
-      setError(errorMessage);
       authToasts.registerError(errorMessage);
     } finally {
       setLoading(false);
@@ -145,10 +139,10 @@ export default function Register() {
               <div className="relative">
                 <User
                   className={`absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors ${fieldErrors.fullName
-                      ? 'text-red-500'
-                      : focused === 'fullName'
-                        ? 'text-teal-600'
-                        : 'text-slate-400'
+                    ? 'text-red-500'
+                    : focused === 'fullName'
+                      ? 'text-teal-600'
+                      : 'text-slate-400'
                     }`}
                 />
                 <Input
@@ -161,10 +155,10 @@ export default function Register() {
                   onKeyPress={handleKeyPress}
                   placeholder="John Doe"
                   className={`pl-10 h-12 transition-all duration-200 ${fieldErrors.fullName
-                      ? 'border-red-500 focus:border-red-500 focus:ring-red-500 bg-red-50'
-                      : focused === 'fullName'
-                        ? 'border-teal-600 ring-2 ring-teal-100'
-                        : 'border-slate-300 hover:border-slate-400'
+                    ? 'border-red-500 focus:border-red-500 focus:ring-red-500 bg-red-50'
+                    : focused === 'fullName'
+                      ? 'border-teal-600 ring-2 ring-teal-100'
+                      : 'border-slate-300 hover:border-slate-400'
                     }`}
                   disabled={loading}
                 />
@@ -187,10 +181,10 @@ export default function Register() {
               <div className="relative">
                 <Mail
                   className={`absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors ${fieldErrors.email
-                      ? 'text-red-500'
-                      : focused === 'email'
-                        ? 'text-teal-600'
-                        : 'text-slate-400'
+                    ? 'text-red-500'
+                    : focused === 'email'
+                      ? 'text-teal-600'
+                      : 'text-slate-400'
                     }`}
                 />
                 <Input
@@ -203,10 +197,10 @@ export default function Register() {
                   onKeyPress={handleKeyPress}
                   placeholder="you@example.com"
                   className={`pl-10 h-12 transition-all duration-200 ${fieldErrors.email
-                      ? 'border-red-500 focus:border-red-500 focus:ring-red-500 bg-red-50'
-                      : focused === 'email'
-                        ? 'border-teal-600 ring-2 ring-teal-100'
-                        : 'border-slate-300 hover:border-slate-400'
+                    ? 'border-red-500 focus:border-red-500 focus:ring-red-500 bg-red-50'
+                    : focused === 'email'
+                      ? 'border-teal-600 ring-2 ring-teal-100'
+                      : 'border-slate-300 hover:border-slate-400'
                     }`}
                   disabled={loading}
                 />
@@ -229,10 +223,10 @@ export default function Register() {
               <div className="relative">
                 <Lock
                   className={`absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors ${fieldErrors.password
-                      ? 'text-red-500'
-                      : focused === 'password'
-                        ? 'text-teal-600'
-                        : 'text-slate-400'
+                    ? 'text-red-500'
+                    : focused === 'password'
+                      ? 'text-teal-600'
+                      : 'text-slate-400'
                     }`}
                 />
                 <Input
@@ -245,10 +239,10 @@ export default function Register() {
                   onKeyPress={handleKeyPress}
                   placeholder="Create a strong password"
                   className={`pl-10 h-12 transition-all duration-200 ${fieldErrors.password
-                      ? 'border-red-500 focus:border-red-500 focus:ring-red-500 bg-red-50'
-                      : focused === 'password'
-                        ? 'border-teal-600 ring-2 ring-teal-100'
-                        : 'border-slate-300 hover:border-slate-400'
+                    ? 'border-red-500 focus:border-red-500 focus:ring-red-500 bg-red-50'
+                    : focused === 'password'
+                      ? 'border-teal-600 ring-2 ring-teal-100'
+                      : 'border-slate-300 hover:border-slate-400'
                     }`}
                   disabled={loading}
                 />
@@ -271,10 +265,10 @@ export default function Register() {
               <div className="relative">
                 <Lock
                   className={`absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors ${fieldErrors.confirmPassword
-                      ? 'text-red-500'
-                      : focused === 'confirmPassword'
-                        ? 'text-teal-600'
-                        : 'text-slate-400'
+                    ? 'text-red-500'
+                    : focused === 'confirmPassword'
+                      ? 'text-teal-600'
+                      : 'text-slate-400'
                     }`}
                 />
                 <Input
@@ -287,10 +281,10 @@ export default function Register() {
                   onKeyPress={handleKeyPress}
                   placeholder="Re-enter your password"
                   className={`pl-10 h-12 transition-all duration-200 ${fieldErrors.confirmPassword
-                      ? 'border-red-500 focus:border-red-500 focus:ring-red-500 bg-red-50'
-                      : focused === 'confirmPassword'
-                        ? 'border-teal-600 ring-2 ring-teal-100'
-                        : 'border-slate-300 hover:border-slate-400'
+                    ? 'border-red-500 focus:border-red-500 focus:ring-red-500 bg-red-50'
+                    : focused === 'confirmPassword'
+                      ? 'border-teal-600 ring-2 ring-teal-100'
+                      : 'border-slate-300 hover:border-slate-400'
                     }`}
                   disabled={loading}
                 />

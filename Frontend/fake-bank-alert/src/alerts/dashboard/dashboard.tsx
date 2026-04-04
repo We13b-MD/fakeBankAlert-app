@@ -1,6 +1,5 @@
 import MainGrid from "./MainGrid";
 import StatsRow from "./StatsCard";
-import RecentAlerts from "./RecentAlerts";
 import DetectText from "../DetectText";
 import DetectImage from "../DetectImage";
 import AlertDetails from "./AlertDetails";
