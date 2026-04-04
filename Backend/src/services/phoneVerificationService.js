@@ -23,7 +23,7 @@ export const sendOtp = async (phoneNumber, otp) => {
       from: process.env.TERMII_SENDER_ID,
       sms: `Your verification code is ${otp}. Valid for 5 minutes.`,
       type: 'plain',
-      channel: 'generic',
+      channel: 'dnd', // Switched to DND route to guarantee 100% delivery for OTPs
     });
 
     return response.data;
