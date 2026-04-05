@@ -146,7 +146,8 @@ export const createAlert = async (req, res) => {
       aiAnalysis = await analyzeAlertWithAi(alertText);
 
       // AI override: if AI says real but rules say fake
-      if (aiAnalysis && aiAnalysis.verdict === 'real' && status !== 'real_looking') {
+      // BUT ONLY IF the mathematical penalty isn't catastrophic (score < 10)
+      if (aiAnalysis && aiAnalysis.verdict === 'real' && status !== 'real_looking' && score < 10) {
         status = 'real_looking';
         score = Math.min(score, 2);
         warnings = warnings.filter(w =>
@@ -574,7 +575,8 @@ export const detectTextAlert = async (req, res) => {
     try {
       aiAnalysis = await analyzeAlertWithAi(text);
       // If AI says it's real but rule-based says fake, trust AI more
-      if (aiAnalysis && aiAnalysis.verdict === 'real' && status !== 'real_looking') {
+      // BUT ONLY IF the mathematical penalty isn't catastrophic (score < 10)
+      if (aiAnalysis && aiAnalysis.verdict === 'real' && status !== 'real_looking' && score < 10) {
         status = 'real_looking';
         score = Math.min(score, 2);
         warnings = warnings.filter(w =>
