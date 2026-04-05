@@ -441,7 +441,7 @@ export const detectTextAlert = async (req, res) => {
       text.match(/(?:trx|transaction)\s*(?:id|no|ref)?[.:\s]*([a-z0-9-]+)/i);
 
     const acctMatch =
-      text.match(/(?:acct|account|a\/c|acc)[.:\s]*(?:no\.?\s*)?([0-9x*]{4,})/i) ||
+      text.match(/(?:acct|account|a\/c|acc)[.:\s]*(?:no\.?\s*)?([0-9]{10})/i) ||
       text.match(/(\*{2,}[0-9]{4,})/i) ||
       text.match(/([0-9]{10})/);
 
@@ -483,14 +483,14 @@ export const detectTextAlert = async (req, res) => {
 
     if (!acctMatch) {
       score += 2;
-      warnings.push("Account number not detected");
+      warnings.push("Account number not detected or properly formatted");
+    }
 
-      // Look explicitly for 1 to 3 digit masks (the lazy scammer trait)
-      const fakeMaskMatch = text.match(/\*{2,}[0-9]{1,3}\b/);
-      if (fakeMaskMatch) {
-        score += 15; // Massive penalty guaranteed to force 'very_likely_fake' classification
-        warnings.push(`Highly suspicious 3-digit account mask detected ("${fakeMaskMatch[0]}"). Nigerian banks strictly enforce 4-digit masking.`);
-      }
+    // Look explicitly for 1 to 3 digit masks (the lazy scammer trait)
+    const fakeMaskMatch = text.match(/\*{2,}[0-9]{1,3}\b/);
+    if (fakeMaskMatch) {
+      score += 15; // Massive penalty guaranteed to force 'very_likely_fake' classification
+      warnings.push(`Highly suspicious 3-digit account mask detected ("${fakeMaskMatch[0]}"). Nigerian banks strictly enforce 4-digit masking.`);
     }
 
     if (!bankMatch) score += 1;
