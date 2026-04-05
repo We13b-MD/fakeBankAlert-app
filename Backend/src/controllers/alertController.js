@@ -441,7 +441,7 @@ export const detectTextAlert = async (req, res) => {
 
     const acctMatch =
       text.match(/(?:acct|account|a\/c|acc)[.:\s]*(?:no\.?\s*)?([0-9x*]{4,})/i) ||
-      text.match(/(\*{2,}[0-9]{3,4})/i) ||
+      text.match(/(\*{2,}[0-9]{4,})/i) ||
       text.match(/([0-9]{10})/);
 
     const bankMatch = BANKS.find(bank =>
