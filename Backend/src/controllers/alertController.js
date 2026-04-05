@@ -116,9 +116,15 @@ export const createAlert = async (req, res) => {
       warnings.push('Urgent or phishing-style language detected in description');
     }
 
-    // Legitimacy signals
+    // Legitimacy & Suspicious structural signals
     if (transactionType === 'credit' || transactionType === 'debit') score -= 1;
-    if (balanceAfterTransaction && !isNaN(balanceAfterTransaction)) score -= 1;
+
+    if (balanceAfterTransaction && !isNaN(balanceAfterTransaction)) {
+      score -= 1;
+    } else {
+      score += 3;
+      warnings.push('Official bank alerts usually display an Available Balance. Missing balance is highly suspicious.');
+    }
 
     // Final status
     let status = 'real_looking';
@@ -480,6 +486,11 @@ export const detectTextAlert = async (req, res) => {
     }
 
     if (!bankMatch) score += 1;
+
+    if (!hasAvailBal) {
+      score += 3;
+      warnings.push("Official bank alerts usually display an Available Balance. Missing balance is highly suspicious.");
+    }
 
     // Scam phrases
     SCAM_PHRASES.forEach(phrase => {
