@@ -487,46 +487,24 @@ export const detectTextAlert = async (req, res) => {
     }
 
     // Look explicitly for 1 to 3 digit masks (the lazy scammer trait)
-    const fakeMaskMatch = text.match(/\*{2,}[0-9]{1,3}\b/);
-    if (fakeMaskMatch) {
-      score += 15; // Massive penalty guaranteed to force 'very_likely_fake' classification
-      warnings.push(`Highly suspicious 3-digit account mask detected ("${fakeMaskMatch[0]}"). Nigerian banks strictly enforce 4-digit masking.`);
+    // BYPASS THIS FOR IMAGES: OCR cameras constantly misread asterisks on real receipts!
+    if (!isImage) {
+      const fakeMaskMatch = text.match(/\*{2,}[0-9]{1,3}\b/);
+      if (fakeMaskMatch) {
+        score += 15; // Massive penalty guaranteed to force 'very_likely_fake' classification
+        warnings.push(`Highly suspicious 3-digit account mask detected ("${fakeMaskMatch[0]}"). Nigerian banks strictly enforce 4-digit masking.`);
+      }
     }
 
     if (!bankMatch) score += 1;
 
-    if (!hasAvailBal) {
+    // BYPASS FOR IMAGES: OCR cameras constantly fail to read "Available Balance" typography on messy backgrounds!
+    if (!hasAvailBal && !isImage) {
       score += 3;
       warnings.push("Official bank alerts usually display an Available Balance. Missing balance is highly suspicious.");
     }
 
     // =============================
-    // STRICT RECEIPT & OCR RULES (ONLY FOR IMAGES)
-    // =============================
-    if (isImage) {
-      if (refMatch) {
-        if (refMatch[1].length < 10) {
-          score += 3;
-          warnings.push(`Suspiciously short Transaction Reference detected (${refMatch[1].length} chars). Real receipts use 12+ characters.`);
-        }
-      } else {
-        score += 2;
-        warnings.push("No Transaction Reference/ID detected. Photo receipts usually contain long reference numbers.");
-      }
-
-      if (amountMatch) {
-        const rawAmount = amountMatch[1];
-        // If amount is >= 1,000, enforce strict programmatic mathematical comma formatting
-        if (parseFloat(rawAmount.replace(/,/g, '')) >= 1000) {
-          const hasPerfectSyntax = /^[1-9]\d{0,2}(,\d{3})*\.\d{2}$/.test(rawAmount);
-          if (!hasPerfectSyntax) {
-            score += 4;
-            warnings.push(`Poorly formatted amount syntax ("${rawAmount}"). Bank receipt software strictly enforces perfect comma separators and 2 decimal points.`);
-          }
-        }
-      }
-    }
-
     // Scam phrases
     SCAM_PHRASES.forEach(phrase => {
       if (normalized.includes(phrase.toLowerCase())) {
@@ -670,7 +648,7 @@ export const detectImageAlert = async (req, res) => {
 
     // Pass extracted text to text detection
     req.body.text = text;
-    req.body.isImage = true; // Flag for strict receipt rules
+    req.body.isImage = true; // Tell the text scanner to turn off severe math rules for this messy OCR text
     return detectTextAlert(req, res);
   } catch (err) {
     console.error("Image detection failed:", err.message);
