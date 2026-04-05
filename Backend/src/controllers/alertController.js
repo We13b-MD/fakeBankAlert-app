@@ -483,6 +483,13 @@ export const detectTextAlert = async (req, res) => {
     if (!acctMatch) {
       score += 2;
       warnings.push("Account number not detected");
+
+      // Look explicitly for 1 to 3 digit masks (the lazy scammer trait)
+      const fakeMaskMatch = text.match(/\*{2,}[0-9]{1,3}\b/);
+      if (fakeMaskMatch) {
+        score += 15; // Massive penalty guaranteed to force 'very_likely_fake' classification
+        warnings.push(`Highly suspicious 3-digit account mask detected ("${fakeMaskMatch[0]}"). Nigerian banks strictly enforce 4-digit masking.`);
+      }
     }
 
     if (!bankMatch) score += 1;
