@@ -414,7 +414,7 @@ export const getRecentAlertDetails = async (req, res) => {
 // DETECT TEXT ALERT
 export const detectTextAlert = async (req, res) => {
   try {
-    const { text } = req.body;
+    const { text, isImage } = req.body;
 
     if (!text || typeof text !== "string") {
       return res.status(400).json({ error: "Alert text is required" });
@@ -493,26 +493,28 @@ export const detectTextAlert = async (req, res) => {
     }
 
     // =============================
-    // STRICT RECEIPT & OCR RULES
+    // STRICT RECEIPT & OCR RULES (ONLY FOR IMAGES)
     // =============================
-    if (refMatch) {
-      if (refMatch[1].length < 10) {
-        score += 3;
-        warnings.push(`Suspiciously short Transaction Reference detected (${refMatch[1].length} chars). Real receipts use 12+ characters.`);
+    if (isImage) {
+      if (refMatch) {
+        if (refMatch[1].length < 10) {
+          score += 3;
+          warnings.push(`Suspiciously short Transaction Reference detected (${refMatch[1].length} chars). Real receipts use 12+ characters.`);
+        }
+      } else {
+        score += 2;
+        warnings.push("No Transaction Reference/ID detected. Photo receipts usually contain long reference numbers.");
       }
-    } else {
-      score += 2;
-      warnings.push("No Transaction Reference/ID detected. Receipts usually contain long reference numbers.");
-    }
 
-    if (amountMatch) {
-      const rawAmount = amountMatch[1];
-      // If amount is >= 1,000, enforce strict programmatic mathematical comma formatting
-      if (parseFloat(rawAmount.replace(/,/g, '')) >= 1000) {
-        const hasPerfectSyntax = /^[1-9]\d{0,2}(,\d{3})*\.\d{2}$/.test(rawAmount);
-        if (!hasPerfectSyntax) {
-          score += 4;
-          warnings.push(`Poorly formatted amount syntax ("${rawAmount}"). Bank software strictly enforces perfect comma separators and 2 decimal points.`);
+      if (amountMatch) {
+        const rawAmount = amountMatch[1];
+        // If amount is >= 1,000, enforce strict programmatic mathematical comma formatting
+        if (parseFloat(rawAmount.replace(/,/g, '')) >= 1000) {
+          const hasPerfectSyntax = /^[1-9]\d{0,2}(,\d{3})*\.\d{2}$/.test(rawAmount);
+          if (!hasPerfectSyntax) {
+            score += 4;
+            warnings.push(`Poorly formatted amount syntax ("${rawAmount}"). Bank receipt software strictly enforces perfect comma separators and 2 decimal points.`);
+          }
         }
       }
     }
@@ -659,6 +661,7 @@ export const detectImageAlert = async (req, res) => {
 
     // Pass extracted text to text detection
     req.body.text = text;
+    req.body.isImage = true; // Flag for strict receipt rules
     return detectTextAlert(req, res);
   } catch (err) {
     console.error("Image detection failed:", err.message);
