@@ -168,12 +168,6 @@ export default function Navbar() {
               <>
                 {/* Public Links */}
                 <Link
-                  to="/detect"
-                  className="px-4 py-2 text-slate-700 hover:text-slate-900 hover:bg-slate-100 rounded-lg font-medium transition-colors"
-                >
-                  Detect Alert
-                </Link>
-                <Link
                   to="/login"
                   className="px-4 py-2 text-slate-700 hover:text-slate-900 hover:bg-slate-100 rounded-lg font-medium transition-colors"
                 >
@@ -281,13 +275,6 @@ export default function Navbar() {
             ) : (
               <>
                 {/* Public Mobile Links */}
-                <Link
-                  to="/detect"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="block px-4 py-2 text-slate-700 hover:bg-slate-100 rounded-lg font-medium transition-colors"
-                >
-                  Detect Alert
-                </Link>
                 <Link
                   to="/login"
                   onClick={() => setMobileMenuOpen(false)}
