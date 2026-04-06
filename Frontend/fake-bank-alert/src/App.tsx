@@ -16,6 +16,8 @@ const AlertsHistory = lazy(() => import('./alerts/AlertHistory'))
 const HeroSection = lazy(() => import('./components/ui/layouts/Herosection'))
 const Settings = lazy(() => import('./settings/settings'))
 const FAQs = lazy(() => import('./pages/FAQs'))
+const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'))
+const TermsOfService = lazy(() => import('./pages/TermsOfService'))
 const NotFound = lazy(() => import('./pages/NotFound'))
 
 
@@ -33,6 +35,8 @@ function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/auth/callback" element={<GoogleCallback />} />
           <Route path="/faqs" element={<FAQs />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+          <Route path="/terms-of-service" element={<TermsOfService />} />
 
           {/* Protected Routes — redirects to /login if not authenticated */}
           <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />

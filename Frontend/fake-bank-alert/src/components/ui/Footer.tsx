@@ -62,12 +62,12 @@ export default function Footer() {
               © {new Date().getFullYear()} FBA Detector. All rights reserved.
             </p>
             <div className="flex items-center gap-6">
-              <a href="#" className="text-sm text-slate-400 hover:text-teal-500 transition-colors">
+              <Link to="/privacy-policy" className="text-sm text-slate-400 hover:text-teal-500 transition-colors">
                 Privacy Policy
-              </a>
-              <a href="#" className="text-sm text-slate-400 hover:text-teal-500 transition-colors">
+              </Link>
+              <Link to="/terms-of-service" className="text-sm text-slate-400 hover:text-teal-500 transition-colors">
                 Terms of Service
-              </a>
+              </Link>
             </div>
           </div>
         </div>
