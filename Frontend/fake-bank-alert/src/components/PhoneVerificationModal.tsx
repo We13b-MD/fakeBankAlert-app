@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, Phone, Shield, CheckCircle, Loader2 } from 'lucide-react';
+import { X, Mail, Shield, CheckCircle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { startPhoneVerification, confirmPhoneVerification } from '@/lib/api';
 
@@ -17,22 +17,16 @@ export default function PhoneVerificationModal({
     onVerified,
 }: PhoneVerificationModalProps) {
     const [step, setStep] = useState<Step>('phone');
-    const [phoneNumber, setPhoneNumber] = useState('');
     const [otp, setOtp] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
 
     const handleSendOtp = async () => {
-        if (!phoneNumber.trim() || phoneNumber.length < 10) {
-            setError('Please enter a valid phone number');
-            return;
-        }
-
         setIsLoading(true);
         setError('');
 
         try {
-            await startPhoneVerification(phoneNumber);
+            await startPhoneVerification('email-mode');
             setStep('otp');
         } catch (err: any) {
             setError(err.message || 'Failed to send OTP');
@@ -66,7 +60,6 @@ export default function PhoneVerificationModal({
 
     const handleClose = () => {
         setStep('phone');
-        setPhoneNumber('');
         setOtp('');
         setError('');
         onClose();
@@ -91,7 +84,7 @@ export default function PhoneVerificationModal({
                             <div className="bg-white/20 p-2 rounded-lg">
                                 <Shield className="w-5 h-5 text-white" />
                             </div>
-                            <h2 className="text-xl font-bold text-white">Phone Verification</h2>
+                            <h2 className="text-xl font-bold text-white">Email Verification</h2>
                         </div>
                         <button
                             onClick={handleClose}
@@ -108,31 +101,18 @@ export default function PhoneVerificationModal({
                         <>
                             <div className="text-center mb-6">
                                 <div className="bg-teal-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                                    <Phone className="w-8 h-8 text-teal-600" />
+                                    <Mail className="w-8 h-8 text-teal-600" />
                                 </div>
                                 <h3 className="text-lg font-semibold text-slate-800 mb-2">
-                                    Verify Your Phone Number
+                                    Verify Your Account
                                 </h3>
                                 <p className="text-sm text-slate-500">
-                                    To use the alert detection feature, please verify your phone number.
-                                    We'll send you a one-time password (OTP).
+                                    To use the alert detection feature, please verify your account.
+                                    We'll send a one-time password (OTP) to your registered email address.
                                 </p>
                             </div>
 
                             <div className="space-y-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                                        Phone Number
-                                    </label>
-                                    <input
-                                        type="tel"
-                                        value={phoneNumber}
-                                        onChange={(e) => setPhoneNumber(e.target.value)}
-                                        placeholder="e.g. +234 801 234 5678"
-                                        className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
-                                    />
-                                </div>
-
                                 {error && (
                                     <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">
                                         {error}
@@ -141,16 +121,16 @@ export default function PhoneVerificationModal({
 
                                 <Button
                                     onClick={handleSendOtp}
-                                    disabled={isLoading || !phoneNumber.trim()}
+                                    disabled={isLoading}
                                     className="w-full h-12 bg-teal-600 hover:bg-teal-700 text-white font-semibold disabled:opacity-50"
                                 >
                                     {isLoading ? (
                                         <>
                                             <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                            Sending OTP...
+                                            Sending OTP to your email...
                                         </>
                                     ) : (
-                                        'Send OTP'
+                                        'Send OTP to my Email'
                                     )}
                                 </Button>
                             </div>
@@ -167,8 +147,8 @@ export default function PhoneVerificationModal({
                                     Enter OTP
                                 </h3>
                                 <p className="text-sm text-slate-500">
-                                    We've sent a 6-digit code to <span className="font-medium text-slate-700">{phoneNumber}</span>.
-                                    Enter it below to verify your phone.
+                                    We've sent a 6-digit code to your registered email address.
+                                    Enter it below to verify your account.
                                 </p>
                             </div>
 
@@ -216,7 +196,7 @@ export default function PhoneVerificationModal({
                                     }}
                                     className="w-full text-sm text-slate-500 hover:text-teal-600 transition-colors"
                                 >
-                                    ← Change phone number
+                                    ← Go back
                                 </button>
                             </div>
                         </>
@@ -228,10 +208,10 @@ export default function PhoneVerificationModal({
                                 <CheckCircle className="w-10 h-10 text-green-500" />
                             </div>
                             <h3 className="text-xl font-semibold text-slate-800 mb-2">
-                                Phone Verified!
+                                Account Verified!
                             </h3>
                             <p className="text-sm text-slate-500">
-                                Your phone number has been verified. You can now use the alert detection feature.
+                                Your account has been verified. You can now use the alert detection feature.
                             </p>
                         </div>
                     )}
