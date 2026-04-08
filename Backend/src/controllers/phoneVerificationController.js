@@ -12,11 +12,14 @@ export const startPhoneVerification = async (req, res) => {
 
     if (user.isPhoneVerified) {
       return res.status(400).json({
-        message: 'Phone number already verified',
+        message: 'Account already verified',
       });
     }
 
-    if (!phoneNumber || phoneNumber.length < 10) {
+    // Accept 'email-mode' as a special bypass token since OTP goes to email
+    const isEmailMode = phoneNumber === 'email-mode';
+
+    if (!isEmailMode && (!phoneNumber || phoneNumber.length < 10)) {
       return res.status(400).json({
         message: 'Invalid phone number',
       });
@@ -26,7 +29,10 @@ export const startPhoneVerification = async (req, res) => {
     const otpHash = hashOtp(otp);
     const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
 
-    user.phoneNumber = phoneNumber;
+    // Only store phoneNumber if a real one was provided
+    if (!isEmailMode) {
+      user.phoneNumber = phoneNumber;
+    }
     user.phoneVerification = { otpHash, expiresAt };
 
     await user.save();
