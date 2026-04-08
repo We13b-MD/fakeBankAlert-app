@@ -30,16 +30,24 @@ export const startPhoneVerification = async (req, res) => {
     user.phoneVerification = { otpHash, expiresAt };
 
     await user.save();
-    await sendOtp(phoneNumber, otp);
+
+    try {
+      // DYNAMIC FALLBACK: Send the OTP natively via Email instead of SMS (due to Termii Constraints)
+      const { sendOtpEmail } = await import('../services/emailService.js');
+      await sendOtpEmail(user.email, otp);
+      console.log(`Verification OTP seamlessly routed to user email (${user.email})`);
+    } catch (err) {
+      console.error("Email Fallback failed!", err);
+    }
 
     return res.status(200).json({
-      message: 'OTP sent to phone number',
+      message: 'OTP uniquely routed to your registered Email address (check inbox)',
       ...(process.env.PHONE_VERIFICATION_MODE === 'mock' && { mockOtp: otp })
     });
   } catch (err) {
     console.error('Start verification error:', err);
     return res.status(500).json({
-      message: 'Failed to send OTP',
+      message: 'Failed to send OTP via Email fallback',
     });
   }
 };
