@@ -5,10 +5,16 @@ dotenv.config();
 export const sendOtpEmail = async (email, otp) => {
   try {
     const transporter = nodemailer.createTransport({
-      service: 'gmail',
+      host: 'smtp.gmail.com',
+      port: 587,
+      secure: false,     // STARTTLS (not SSL port 465 which Render blocks)
+      family: 4,         // Force IPv4 to bypass Render's IPv6 issue
       auth: {
         user: process.env.EMAIL_USER || 'idundunmd13@gmail.com',
         pass: process.env.EMAIL_PASS || 'rokqnzgnvpldjuos'
+      },
+      tls: {
+        rejectUnauthorized: false
       }
     });
 
