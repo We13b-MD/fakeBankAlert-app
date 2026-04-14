@@ -40,8 +40,8 @@ app.use(
       // allow requests with no origin (Postman, mobile apps)
       if (!origin) return callback(null, true);
 
-      // Automatically allow ANY Vercel preview link!
-      if (allowedOrigins.includes(origin) || origin.endsWith('.vercel.app')) {
+      // Automatically allow HTTPS Vercel preview links (require https to prevent HTTP downgrade)
+      if (allowedOrigins.includes(origin) || (origin.startsWith('https://') && origin.endsWith('.vercel.app'))) {
         callback(null, true);
       } else {
         callback(new Error("Not allowed by CORS"));
@@ -53,7 +53,9 @@ app.use(
   })
 );
 
-app.use(express.json())
+// Limit JSON body to 50kb to prevent payload-bomb / DoS attacks
+app.use(express.json({ limit: '50kb' }))
+app.use(express.urlencoded({ extended: false, limit: '50kb' }))
 
 app.use(
   session({
@@ -67,7 +69,8 @@ app.use(
     }),
     cookie: {
       secure: process.env.NODE_ENV === 'production',
-      httpOnly: true,
+      httpOnly: true, // Prevents JS access (XSS protection)
+      sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax', // CSRF protection
       maxAge: 24 * 60 * 60 * 1000, // 1 day
     },
   })
