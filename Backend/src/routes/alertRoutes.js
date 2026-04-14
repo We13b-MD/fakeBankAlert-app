@@ -2,10 +2,8 @@ import express from 'express';
 import { createAlert, getUserAlerts, detectTextAlert, detectImageAlert, getDashboardStats, getRecentAlertDetails } from '../controllers/alertController.js';
 import { protect } from '../middleware/authMiddleware.js';
 import multer from 'multer';
+import { requirePhoneVerified } from '../middleware/requiredPhoneverified.js';
 import { alertLimiter } from '../middleware/rateLimiter.js';
-
-// TODO: Re-enable email verification middleware once domain is set up with Resend
-// import { requireEmailVerified } from '../middleware/requiredEmailVerified.js';
 
 const router = express.Router()
 const upload = multer({
@@ -20,12 +18,13 @@ const upload = multer({
   }
 });
 
-router.post('/create', protect, alertLimiter, createAlert);
+router.post('/create', protect, requirePhoneVerified, alertLimiter, createAlert);
 router.get('/my-alerts', protect, getUserAlerts);
-router.post("/detect-text", protect, alertLimiter, detectTextAlert);
+router.post("/detect-text", protect, requirePhoneVerified, alertLimiter, detectTextAlert);
 router.post(
   '/detect-image',
   protect,
+  requirePhoneVerified,
   alertLimiter,
   upload.single('image'),
   detectImageAlert
