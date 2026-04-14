@@ -16,39 +16,76 @@ const SCAM_PHRASES = [
 ]
 
 const BANKS = [
-  'access bank',
-  'access',
+  'guaranty trust bank',
   'gtbank',
   'gtb',
-  'guaranty trust',
   'gt bank',
-  'uba',
-  'united bank',
-  'zenith',
+  'access bank',
+  'access bank nigeria',
   'zenith bank',
-  'fcmb',
-  'first city',
-  'kuda',
-  'kuda bank',
-  'opay',
-  'opal',
-  'moniepoint',
+  'zenith',
+  'united bank for africa',
+  'uba',
   'first bank',
   'firstbank',
+  'first bank of nigeria',
+  'fcmb',
+  'first city monument bank',
+  'kuda',
+  'kuda bank',
+  'moniepoint',
+  'opay',
+  'palmpay',
+  'fidelity bank',
   'fidelity',
+  'stanbic ibtc',
   'stanbic',
+  'sterling bank',
   'sterling',
+  'wema bank',
   'wema',
+  'polaris bank',
   'polaris',
   'union bank',
   'ecobank',
+  'keystone bank',
   'keystone',
+  'heritage bank',
   'heritage',
+  'jaiz bank',
   'jaiz',
+  'providus bank',
   'providus',
-  'palmpay',
+  'chipper cash',
   'chipper',
 ]
+
+/**
+ * Smarter bank detection: scores ALL matching banks by
+ * (name length × occurrences in text) and returns the winner.
+ * This prevents a tiny "opay" mention in a notification bar
+ * from beating a dominant "GTBank" mention in the actual alert.
+ */
+function detectBestBank(text) {
+  const normalized = text.toLowerCase();
+  let bestBank = null;
+  let bestScore = 0;
+
+  for (const bank of BANKS) {
+    const escaped = bank.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(escaped, 'gi');
+    const matches = normalized.match(regex);
+    if (matches) {
+      // Score = occurrences × name length: longer/more frequent name wins
+      const score = matches.length * bank.length;
+      if (score > bestScore) {
+        bestScore = score;
+        bestBank = bank;
+      }
+    }
+  }
+  return bestBank;
+}
 
 // CREATE ALERT
 export const createAlert = async (req, res) => {
@@ -71,7 +108,7 @@ export const createAlert = async (req, res) => {
     let score = 0;
 
     // Check if bank name is in known banks list
-    const bankMatch = BANKS.find(bank => normalized.includes(bank.toLowerCase()));
+    const bankMatch = detectBestBank(bankName || '');
     if (!bankMatch) {
       score += 1;
       warnings.push('Bank name not in recognized Nigerian banks list');
@@ -429,11 +466,12 @@ export const detectTextAlert = async (req, res) => {
     // BASIC EXTRACTIONS (broadened for OCR text)
     // =============================
 
+    // ── Amount: handle ₦ and common OCR misreads (#, W, N prefix) ──
     const amountMatch =
-      text.match(/(?:ngn|₦|n)\s?([\d,]+(?:\.\d{2})?)/i) ||
-      text.match(/(?:amt|amount)[:\s]*([\d,]+(?:\.\d{2})?)/i) ||
-      text.match(/(?:sum|total)[:\s]*([\d,]+(?:\.\d{2})?)/i) ||
-      text.match(/([\d,]{4,}(?:\.\d{2}))/i) ||
+      text.match(/(?:ngn|₦|\#|\bW)\s?([\d,]+(?:\.\d{1,2})?)/i) ||
+      text.match(/(?:amt|amount)[:\s]*([\d,]+(?:\.\d{1,2})?)/i) ||
+      text.match(/(?:sum|total)[:\s]*([\d,]+(?:\.\d{1,2})?)/i) ||
+      text.match(/([\d]{1,3}(?:,[\d]{3})+(?:\.\d{1,2})?)/i) || // 50,000.00 style
       text.match(/([\d,]{4,}\.\d{2})/);
 
     const refMatch =
@@ -445,9 +483,8 @@ export const detectTextAlert = async (req, res) => {
       text.match(/(\*{2,}[0-9]{4,})/i) ||
       text.match(/([0-9]{10})/);
 
-    const bankMatch = BANKS.find(bank =>
-      normalized.includes(bank.toLowerCase())
-    );
+    // ── Bank: use scoring algorithm so dominant bank wins ──
+    const bankMatch = detectBestBank(text);
 
     // Transaction type signals
     const hasCR = /\b(cr|credit|credited)\b/i.test(text);
