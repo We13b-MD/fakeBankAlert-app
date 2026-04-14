@@ -20,6 +20,8 @@ const BANKS = [
   'access',
   'gtbank',
   'gtb',
+  'gtco',
+  'gtworld',
   'guaranty trust',
   'gt bank',
   'uba',
@@ -31,7 +33,6 @@ const BANKS = [
   'kuda',
   'kuda bank',
   'opay',
-  'opal',
   'moniepoint',
   'first bank',
   'firstbank',
@@ -430,7 +431,7 @@ export const detectTextAlert = async (req, res) => {
     // =============================
 
     const amountMatch =
-      text.match(/(?:ngn|₦|n)\s?([\d,]+(?:\.\d{2})?)/i) ||
+      text.match(/(?:ngn|₦|%|n)\s?([\d,]+(?:\.\d{1,2})?)/i) ||
       text.match(/(?:amt|amount)[:\s]*([\d,]+(?:\.\d{2})?)/i) ||
       text.match(/(?:sum|total)[:\s]*([\d,]+(?:\.\d{2})?)/i) ||
       text.match(/([\d,]{4,}(?:\.\d{2}))/i) ||
