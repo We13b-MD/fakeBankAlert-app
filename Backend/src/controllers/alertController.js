@@ -612,6 +612,7 @@ export const detectTextAlert = async (req, res) => {
       },
       warnings,
       aiAnalysis,
+      ocrText: text,
     });
   } catch (err) {
     console.error(err);
@@ -631,6 +632,7 @@ export const detectImageAlert = async (req, res) => {
 
     // OCR: extract text from image
     const { data: { text } } = await Tesseract.recognize(imagePath, "eng");
+    console.log('[OCR DEBUG] Raw text extracted:\n', text);
 
     // Delete temp image after OCR
     try {
