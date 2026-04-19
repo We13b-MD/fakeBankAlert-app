@@ -31,8 +31,12 @@ const faqData = [
         answer: "Yes, your privacy is our priority. All alert data is encrypted and securely stored. We never share your personal information or alert details with third parties. Your verified alerts are only visible to you on your dashboard."
     },
     {
-        question: "Why do I need to verify my phone number?",
-        answer: "Phone verification adds an extra layer of security to your account and helps us prevent abuse of the platform. It ensures that each account is tied to a real person, which helps maintain the integrity of our detection service."
+        question: "What does the Trust Score mean?",
+        answer: "After analyzing an alert, we give it a Trust Score from 0 to 100. Here's what the scores mean:\n\n• 70–100 (✅ Real / Authentic): The alert matches genuine bank patterns. It appears to be a legitimate transaction.\n\n• 40–69 (⚠️ Suspicious): Something doesn't look right. Proceed with caution — verify the transaction directly with your bank before acting on it.\n\n• 0–39 (🚨 Likely Fake): Multiple red flags detected. This alert is very likely fraudulent. Do NOT release any goods or services based on this alert."
+    },
+    {
+        question: "What should I do if my alert is flagged as Suspicious?",
+        answer: "If your alert receives a score between 40–69, we recommend: (1) Check your actual bank app or USSD to confirm the transaction. (2) Call your bank's official customer service number. (3) Do not release goods or services until you confirm the money is truly in your account. A 'Suspicious' score doesn't always mean fake — it means our system found patterns that need extra verification."
     },
 ];
 

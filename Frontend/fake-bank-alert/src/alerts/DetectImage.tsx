@@ -165,14 +165,16 @@ export default function DetectImage() {
                 className={
                   result.status === "real_looking"
                     ? "text-green-600"
-                    : "text-red-600"
+                    : result.status === "suspicious"
+                      ? "text-yellow-600"
+                      : "text-red-600"
                 }
               >
                 {result.status === "real_looking"
-                  ? "✅ Real Looking"
-                  : result.status === "likely_fake"
-                    ? "⚠️ Likely Fake"
-                    : "🚨 Very Likely Fake"}
+                  ? "✅ Real / Authentic"
+                  : result.status === "suspicious"
+                    ? "⚠️ Suspicious"
+                    : "🚨 Likely Fake"}
               </span>
             </p>
 

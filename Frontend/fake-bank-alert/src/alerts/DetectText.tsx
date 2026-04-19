@@ -113,7 +113,13 @@ export default function DetectText() {
           {result && (
             <div className="mt-4 p-4 border rounded-lg bg-slate-50 text-sm">
               <p className="font-semibold">
-                Status: <span className="capitalize">{result.status}</span>
+                Status: <span className={
+                  result.status === 'real_looking' ? 'text-green-600' :
+                    result.status === 'suspicious' ? 'text-yellow-600' : 'text-red-600'
+                }>
+                  {result.status === 'real_looking' ? '✅ Real / Authentic' :
+                    result.status === 'suspicious' ? '⚠️ Suspicious' : '🚨 Likely Fake'}
+                </span>
               </p>
 
               <p>Confidence: {Math.round(result.confidence * 100)}%</p>

@@ -127,21 +127,17 @@ export const createAlert = async (req, res) => {
       warnings.push('Official bank alerts usually display an Available Balance. Missing balance is highly suspicious.');
     }
 
-    let status = 'real_looking';
-    if (score >= 5) status = 'likely_fake';
-    if (score >= 8) status = 'very_likely_fake';
-
-    // If there are warnings but score is low, still flag as suspicious
-    // This matches the dashboard logic and prevents misleading "real" verdicts
-    if (warnings.length > 0 && status === 'real_looking') {
-      status = 'likely_fake';
-    }
-
     // Normalize confidence 0–1
     const confidence = score <= 0 ? 0 : Math.min(score / 10, 1);
 
     // Trust score (0-100, higher = more trustworthy)
     const trustScore = Math.max(0, Math.min(100, Math.round(70 - (score * 7))));
+
+    // Status derived from trust score (single source of truth)
+    // 70-100 = Real/Authentic | 40-69 = Suspicious | 0-39 = Likely Fake
+    let status = 'real_looking';
+    if (trustScore < 70) status = 'suspicious';
+    if (trustScore < 40) status = 'likely_fake';
 
     // =============================
     // AI ANALYSIS (Optional)
@@ -545,18 +541,18 @@ export const detectTextAlert = async (req, res) => {
     // =============================
     // FINAL DECISION LOGIC
     // =============================
-    let status = "real_looking";
-
-    if (score >= 5) status = "likely_fake";
-    if (score >= 8) status = "very_likely_fake";
-
-    // If there are warnings but score is low, still flag as suspicious
-    if (warnings.length > 0 && status === "real_looking") {
-      status = "likely_fake";
-    }
 
     // Normalize confidence 0–1 (clamp negative scores to 0 = very confident real)
     const confidence = score <= 0 ? 0 : Math.min(score / 10, 1);
+
+    // Trust score (0-100, higher = more trustworthy)
+    const trustScore = Math.max(0, Math.min(100, Math.round(70 - (score * 7))));
+
+    // Status derived from trust score (single source of truth)
+    // 70-100 = Real/Authentic | 40-69 = Suspicious | 0-39 = Likely Fake
+    let status = "real_looking";
+    if (trustScore < 70) status = "suspicious";
+    if (trustScore < 40) status = "likely_fake";
 
     // =============================
     // AI ANALYSIS (Optional)
@@ -610,7 +606,6 @@ export const detectTextAlert = async (req, res) => {
     // =============================
     // RESPONSE
     // =============================
-    const trustScore = Math.max(0, Math.min(100, Math.round(70 - (score * 7))));
 
     return res.status(200).json({
       status,
