@@ -25,6 +25,7 @@ const alertSchema = new mongoose.Schema(
     },
     warnings: { type: [String], default: [] },
     confidence: { type: Number, default: 0 },
+    status: { type: String, enum: ['real_looking', 'likely_fake', 'very_likely_fake'], default: 'real_looking' },
     ocrText: { type: String },
   },
   {

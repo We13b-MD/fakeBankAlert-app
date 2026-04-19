@@ -53,6 +53,7 @@ export default function DetectImage() {
     try {
       const data = await detectImageAlert(imageFile);
       setResult(data);
+      window.dispatchEvent(new Event('alert-detected'));
     } catch (err: any) {
       console.error("Detection error:", err.message);
       if (err instanceof PhoneVerificationRequiredError) {

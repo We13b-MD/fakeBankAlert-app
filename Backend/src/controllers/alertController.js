@@ -127,10 +127,15 @@ export const createAlert = async (req, res) => {
       warnings.push('Official bank alerts usually display an Available Balance. Missing balance is highly suspicious.');
     }
 
-    // Final status
     let status = 'real_looking';
     if (score >= 5) status = 'likely_fake';
     if (score >= 8) status = 'very_likely_fake';
+
+    // If there are warnings but score is low, still flag as suspicious
+    // This matches the dashboard logic and prevents misleading "real" verdicts
+    if (warnings.length > 0 && status === 'real_looking') {
+      status = 'likely_fake';
+    }
 
     // Normalize confidence 0–1
     const confidence = score <= 0 ? 0 : Math.min(score / 10, 1);
@@ -180,6 +185,7 @@ export const createAlert = async (req, res) => {
       },
       warnings,
       confidence,
+      status,
     });
 
     return res.status(201).json({
@@ -381,7 +387,7 @@ export const getRecentAlertDetails = async (req, res) => {
       return res.status(200).json(null);
     }
 
-    // Determine if fake based on confidence and warnings
+    // Determine if fake based on confidence and warnings (original proven logic)
     const isFake = alert.confidence > 0.3 || (alert.warnings && alert.warnings.length > 0);
 
     const alertDetails = {
@@ -544,6 +550,11 @@ export const detectTextAlert = async (req, res) => {
     if (score >= 5) status = "likely_fake";
     if (score >= 8) status = "very_likely_fake";
 
+    // If there are warnings but score is low, still flag as suspicious
+    if (warnings.length > 0 && status === "real_looking") {
+      status = "likely_fake";
+    }
+
     // Normalize confidence 0–1 (clamp negative scores to 0 = very confident real)
     const confidence = score <= 0 ? 0 : Math.min(score / 10, 1);
 
@@ -592,6 +603,7 @@ export const detectTextAlert = async (req, res) => {
       },
       warnings,
       confidence,
+      status,
       ocrText: text,
     });
 
