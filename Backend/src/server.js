@@ -11,6 +11,7 @@ import { protect } from './middleware/authMiddleware.js';
 import passport from 'passport';
 import session from 'express-session'
 import phoneVerificationRoutes from './routes/phoneVerificationRoutes.js'
+import { startCronJobs } from './jobs/cronJobs.js'
 
 // Only connect if MONGO_URI exists
 if (!process.env.MONGO_URI) {
@@ -101,6 +102,9 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server started on ${PORT}`);
+
+  // Start background cleanup jobs
+  startCronJobs();
 
   // Keep Render Awake by pinging its own '/' route every 14 minutes so it never hits the 15-minute sleep threshold
   const RENDER_URL = 'https://fakebankalert-app-1.onrender.com';
