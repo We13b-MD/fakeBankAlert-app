@@ -1,0 +1,114 @@
+Fake Bank Alert Detector - System Design Interview Questions & Answers
+===================================================================
+
+This document contains potential system design and architecture interview questions tailored specifically around the Fake Bank Alert Detector project you built, along with comprehensive suggested answers.
+
+-------------------------------------------------------------------
+Section 1: High-Level Architecture & Scaling
+-------------------------------------------------------------------
+
+1. "Walk me through the high-level architecture of your Fake Bank Alert Detector. How does data flow from the moment a user uploads an image/text to the final trust score generation?"
+ANSWER:
+The architecture follows a standard client-server model. Data flows primarily in these steps:
+- Client (React/Vercel): The user uploads an image or raw text on the frontend. The React application sends a REST API request (containing the payload) to the Node/Express backend.
+- API Layer (Express/Render): The request is authenticated. If the payload is an image, it is sent through an OCR (Optical Character Recognition) module to extract raw text (e.g., using Tesseract.js).
+- Scoring Engine (Node.js): The extracted text is run through a deterministic Rule-Based Engine containing Regex heuristics. It assigns penalty points for red flags (+3 for missing available balance, +4 for bad decimal math, +5 for phishing tone).
+- OpenAI Module: In parallel (or sequentially, if the rules flag something ambiguous), the text is sent to the OpenAI API to analyze context. If the AI determines the text is a false positive flagged by the rule engine, it overrides the score.
+- Storage Layer (MongoDB): The final alert result, original text, and calculated Trust Score are saved into the MongoDB cluster (Alert and alertHistory schemas).
+- Final Response: The backend maps the penalty points into a Trust Score percentage (starting at 70%, minus 7% per penalty point) and returns the JSON payload to the client, triggering the UI update.
+
+2. "Suppose your application goes viral and you start receiving 10,000 alert verification requests per minute. Which parts of your system would bottleneck first, and how would you scale them?"
+ANSWER:
+The main bottleneck would be the OCR processing and the OpenAI API requests.
+- OCR is CPU-heavy. Running synchronous OCR in the main Express Event Loop will block Node.js and crash the server.
+- OpenAI has rate limits (Requests per Minute) and inherent network latency.
+Scaling Strategy:
+- Asynchronous Workers: I would decouple the image processing and AI evaluation into a message broker system like RabbitMQ or Kafka, paired with background worker processes (using BullMQ or similar).
+- Polling/WebSockets: The Express server would immediately return a "processing" status and a job ID to the client. The client would then use WebSockets or long-polling to get the final result.
+- Caching: Identical scam texts are often reused by scammers en masse. I would implement a Redis cache. Hash the incoming text, and if it matches a previously calculated text hash, return the final result immediately without invoking OCR or OpenAI.
+
+3. "You currently deploy your backend on Render and frontend on Vercel. Can you explain the pros and cons of this deployment strategy compared to hosting everything on a single AWS EC2 instance?"
+ANSWER:
+- Pros of Vercel/Render (PaaS): Zero infrastructure management required. Vercel acts as a global CDN ensuring lightning-fast static asset delivery for the React app. Render handles CI/CD right out of the box (deploy on git push), automatically spins up TLS certificates, and makes horizontal scaling just a UI toggle.
+- Cons of PaaS: Less underlying control, more expensive at scale compared to raw compute, and backend instances can suffer from "cold starts" if scaled to zero on a free/basic tier.
+- Single EC2 (IaaS) Pros: Maximum control over the OS architecture, much cheaper at high volume, and zero cold starts (the server is always running).
+- Single EC2 Cons: Single point of failure. You must manually configure Nginx, SSL certs, auto-scaling groups, and set up your own CI/CD pipelines (e.g., Jenkins/GitHub Actions), significantly slowing down development speed.
+
+-------------------------------------------------------------------
+Section 2: The Core Detection Engine (Rules vs ML)
+-------------------------------------------------------------------
+
+4. "Your detection engine calculates a Trust Score using multiple granular penalty rules (+3 for missing balance, +4 for bad decimal math) combined with an OpenAI override. Why did you choose a hybrid approach (Regex/Heuristics + LLM) instead of relying entirely on standard Machine Learning models from the start?"
+ANSWER:
+I chose a hybrid approach for a balance of speed, cost, and explainability.
+- Rule/Regex Engine (Heuristics) is incredibly fast and completely free to run locally. Furthermore, the outcomes are 100% explainable—if the score is low, I know exactly that it failed rule #3 (bad decimal formatting). This allows me to confidently show the user a detailed UI explaining exactly *why* the alert was flagged.
+- Standard ML requires a massive dataset of labeled fake vs. real bank alerts, which is difficult to acquire securely.
+- LLM (OpenAI) introduces latency and cost but is exceptional at nuance. Scammers try to evade rules using emotional manipulation ("click here immediately"). Regex struggles to grasp tone, but an LLM understands semantic intent perfectly. Thus, rules catch mathematical manipulation, while AI catches emotional and contextual anomalies.
+
+5. "How do you handle edge cases where the rule-based engine flags a valid receipt because of a bank’s strange formatting, but the OpenAI module is temporarily down or timing out?"
+ANSWER:
+A resilient system requires graceful degradation.
+If the OpenAI API is down or times out, I catch that API error. Instead of failing the entire request and showing the user a 500 error, the system relies strictly on the rule-based engine. To maintain user trust, the backend would append a warning flag to the JSON response (e.g., `ai_analysis: unavailable`). The React UI would render the Trust Score but display a warning banner: "AI context analysis is currently down. This score is provisionally based on mathematical parameters only."
+
+6. "OCR can be notoriously inaccurate with blurry or low-light images. How does your algorithm handle garbage data or partially extracted text where even the 'Available Balance' string is cut off?"
+ANSWER:
+My algorithm is inherently defensive against this. If OCR completely fails to parse words like "amount" or monetary values, my system applies a harsh penalty for "MISSING OR INVALID AMOUNT (+3 Penalty)".
+However, to fix the specific issue of distinguishing between a "blurry image" and a "scam alert", we can attach image classification upfront. If the OCR confidence score returned by the library is below a certain threshold (e.g., 60%), the backend rejects the image immediately and returns a 400 Bad Request, instructing the user: "Image is too blurry to analyze. Please upload a clearer screenshot." instead of generating a false Trust Score.
+
+-------------------------------------------------------------------
+Section 3: Third-Party Integrations & Reliability
+-------------------------------------------------------------------
+
+7. "You recently migrated from a failing SMS-based phone verification system to a robust Email-based OTP fallback. In a system design context, how do you handle third-party service failures (like Twilio dropping SMS) without locking users out completely?"
+ANSWER:
+Reliability is about reducing Single Points of Failure. When Twilio APIs failed (or blocked SMS due to telecom KYC constraints), the security gate locked users out. The solution is multi-channel fallback and circuit breakers.
+- Implementation: During authentication, the system attempts the primary method (SMS). If the SMS service catches a timeout, a 429 Rate Limit, or a 500 error, a `catch` block intercepts the failure.
+- It automatically shifts to the secondary email delivery service (e.g., SendGrid/Nodemailer), passing the generated OTP through email. The client UI is simultaneously updated to read: "SMS delivery delayed. OTP has been sent to your registered email."
+
+8. "Your system makes synchronous external calls to the OpenAI API during the alert verification request. What happens if OpenAI takes 15 seconds to respond? How do you prevent thread blocking and UI timeouts?"
+ANSWER:
+Relying on synchronous external calls is dangerous. If OpenAI takes 15 seconds, the HTTP request hangs, risking a timeout standard on host platforms (Render routes usually timeout at 60s, Vercel serverless functions often time out at 10s on the free tier).
+- Solution: The system should be decoupled into an asynchronous architecture.
+- Instead of awaiting the OpenAI call directly inside the Express controller route, the server acknowledges the request instantly with a `202 Accepted` status and provides the client a `verificationId`. The payload is then sent to a background worker.
+- The UI displays a spinning "Analyzing parameters..." graphic.
+- The React client then polls the backend via an endpoint like `GET /api/status/:verificationId` every 2 seconds, checking if the background worker has finished saving the final score to MongoDB.
+
+-------------------------------------------------------------------
+Section 4: Data Modeling & Storage
+-------------------------------------------------------------------
+
+9. "We see you have Alert, User, and alertHistory models. Why use a NoSQL database like MongoDB for this application instead of a SQL database like PostgreSQL?"
+ANSWER:
+MongoDB fits perfectly here because the payload data can be inherently unstructured.
+- The OCR outputs strings of variable and chaotic lengths.
+- The OpenAI API returns dynamic JSON blocks.
+- Bank Alert structures in the real world differ drastically (GTBank alerts look entirely different from UBA alerts).
+NoSQL allows for a fluid, schema-less approach to store the original `raw_text` payload alongside our arbitrary penalty objects without having to run rigid database migrations every time a new alert structure or penalty rule is supported. Furthermore, it yields high write-throughput, which is necessary when logging potentially thousands of `alertHistory` requests per day.
+
+10. "If an interviewer asks you to build an analytics dashboard showing 'Most common scam phrases used this week', how would you design the database query and caching layer for that given millions of stored alerts?"
+ANSWER:
+Querying full-text fields across millions of rows in real-time is extremely slow.
+- Database Strategy: I would implement an asynchronous cron job (batch process) that runs during low-traffic periods (e.g., 3:00 AM).
+- This script would run an Aggregation Pipeline over the MongoDB `Alert` collection mapping and grouping the hardcoded scam phrases (e.g. "you have been credited").
+- Caching: Once the script determines the top 10 phrases, it stores that small array as a key-value pair in Redis (e.g., `SET top_scam_phrases_weekly '[...]'`).
+- Client Request: When the Admin dashboard loads, it performs a Lightning-fast `O(1)` read from the Redis cache, completely bypassing the heavy database query.
+
+-------------------------------------------------------------------
+Section 5: Security & Edge Cases
+-------------------------------------------------------------------
+
+11. "Scammers might realize your app checks for specific phrases (like 'you have been credited') and start bypassing your Regex. How would you design the system to automatically learn and update its internal rules over time?"
+ANSWER:
+A static rule engine eventually becomes obsolete. The system requires an adaptive Feedback Loop.
+- On the UI dashboard, I would add a "Report Incorrect Result" button next to past verifications. 
+- When an alert labeled "Real" later proves to be a "Scam", the user flags it.
+- This creates a massive labeled corpus of "False Negatives" inside the DB.
+- These specific flagged databases can automatically be used as training data fine-tuning an ML model, or piped to a system administrator who can isolate the new scam patterns or keywords and dynamically append them to the rule-engine configuration through an Admin Panel, instead of relying on hardcoded application changes.
+
+12. "A malicious user writes a script to hit your API 500 times a second with randomly generated fake alerts to rack up your OpenAI API bill. How does your system protect itself?"
+ANSWER:
+To protect billing and ensure uptime, the system requires Rate Limiting and Identity Verification.
+- API Gateway/Rate Limiter: I would implement IP-based rate limiting using something like `express-rate-limit` locally or Cloudflare globally, capping unauthenticated users to 5 requests per minute.
+- Auth Constraints: To actually use the heavy OCR/OpenAI endpoint, users must pass the Mandatory Authentication layer (e.g., Google OAuth + Email OTP middleware) ensuring purely anonymous spam is impossible.
+- Payload Limits: I would validate incoming request sizes aggressively. Reject images over 2MB or text bodies exceeding 1000 characters immediately so no CPU time or LLM tokens are wasted.
+- Billing Alerts: Setup hard billing caps natively in the OpenAI console, ensuring costs cannot physically exceed a set budget anomaly.

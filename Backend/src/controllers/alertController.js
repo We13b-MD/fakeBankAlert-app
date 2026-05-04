@@ -436,8 +436,8 @@ export const detectTextAlert = async (req, res) => {
       text.match(/(?:ngn|₦|%|n)\s?([\d,]+(?:\.\d{1,2})?)/i) ||
       text.match(/(?:amt|amount)[:\s]*([\d,]+(?:\.\d{2})?)/i) ||
       text.match(/(?:sum|total)[:\s]*([\d,]+(?:\.\d{2})?)/i) ||
-      text.match(/([\d,]{4,}(?:\.\d{2}))/i) ||
-      text.match(/([\d,]{4,}\.\d{2})/);
+      text.match(/([\d,]{4,}(?:\.\d{1,2})?)/i) ||   // Broader: catches e.g. "5,000" or "50000" without currency prefix
+      text.match(/([\d]{4,}\.\d{2})/);
 
     const refMatch =
       text.match(/(?:ref|reference|txn|trans)[.:\s]*([a-z0-9-]+)/i) ||
@@ -501,10 +501,13 @@ export const detectTextAlert = async (req, res) => {
 
     if (!bankMatch) score += 1;
 
-    // BYPASS FOR IMAGES: OCR cameras constantly fail to read "Available Balance" typography on messy backgrounds!
-    if (!hasAvailBal && !isImage) {
-      score += 3;
-      warnings.push("Official bank alerts usually display an Available Balance. Missing balance is highly suspicious.");
+    // NOTE: SMS/text bank alerts rarely contain "Available Balance" — that's a card/image format thing.
+    // We only penalise if this is NEITHER an image NOR a text alert (i.e. some future mode).
+    // For both text and image modes we skip this penalty to avoid false positives on real SMS alerts.
+    // We still flag it as an informational warning (low weight) so the user knows.
+    if (!hasAvailBal) {
+      score += 1; // Very mild penalty — real SMS alerts often omit this
+      warnings.push("No 'Available Balance' field detected (common in SMS alerts — low suspicion indicator).");
     }
 
     // =============================
