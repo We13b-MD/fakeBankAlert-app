@@ -3,6 +3,12 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 export const sendOtpEmail = async (email, otp) => {
+  // Guard: fail loudly if credentials are not set via environment variables.
+  // NEVER hardcode credentials here — use .env locally and Render env vars in production.
+  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+    throw new Error('[emailService] EMAIL_USER and EMAIL_PASS must be set as environment variables.');
+  }
+
   try {
     const transporter = nodemailer.createTransport({
       host: 'smtp.gmail.com',
@@ -10,8 +16,8 @@ export const sendOtpEmail = async (email, otp) => {
       secure: false,     // STARTTLS (not SSL port 465 which Render blocks)
       family: 4,         // Force IPv4 to bypass Render's IPv6 issue
       auth: {
-        user: process.env.EMAIL_USER || 'idundunmd13@gmail.com',
-        pass: process.env.EMAIL_PASS || 'rokqnzgnvpldjuos'
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
       },
       tls: {
         rejectUnauthorized: false
@@ -19,7 +25,7 @@ export const sendOtpEmail = async (email, otp) => {
     });
 
     const mailOptions = {
-      from: `"FBA Detector Security" <idundunmd13@gmail.com>`,
+      from: `"FBA Detector Security" <${process.env.EMAIL_USER}>`,
       to: email,
       subject: 'Security: Your Account Verification OTP',
       html: `
